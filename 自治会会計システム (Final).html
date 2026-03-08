@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a3a5c">
+<title>自治会・団体会計システム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a3a5c;
+    --navy-light: #2a5080;
+    --gold: #c8a84b;
+    --gold-light: #e8c870;
+    --bg: #f4f1eb;
+    --bg2: #ece8e0;
+    --white: #fdfcfa;
+    --text: #2a2520;
+    --text2: #5a5550;
+    --border: #d0c8b8;
+    --red: #c0392b;
+    --green: #1e7b4e;
+    --shadow: 0 4px 20px rgba(26,58,92,0.12);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ===== LOGIN ===== */
+  #loginScreen {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 60%, #3a6090 100%);
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 40px 32px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-logo {
+    text-align: center; margin-bottom: 32px;
+  }
+  .login-logo .icon { font-size: 48px; }
+  .login-logo h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 20px; color: var(--navy);
+    margin-top: 8px; line-height: 1.4;
+  }
+  .login-logo p { color: var(--text2); font-size: 13px; margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px 16px;
+    border: 2px solid var(--border); border-radius: var(--radius);
+    font-family: inherit; font-size: 16px; color: var(--text);
+    background: var(--bg); transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none; border-color: var(--navy);
+  }
+  .btn-primary {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: white; border: none; border-radius: var(--radius);
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; margin-top: 8px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .login-hint { text-align: center; margin-top: 16px; font-size: 12px; color: var(--text2); }
+
+  /* ===== MAIN LAYOUT ===== */
+  #app { display: none; min-height: 100vh; flex-direction: column; }
+  header {
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: white; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  header h1 { font-size: 16px; font-weight: 700; }
+  header .org-name { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .btn-icon {
+    background: rgba(255,255,255,0.15); border: none;
+    color: white; padding: 8px 12px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    display: flex; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    flex-shrink: 0; padding: 12px 16px;
+    background: none; border: none; border-bottom: 3px solid transparent;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--text2); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-btn.active {
+    color: var(--navy); border-bottom-color: var(--navy);
+    font-weight: 700;
+  }
+
+  /* ===== CONTENT ===== */
+  main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 16px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .card-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px; font-weight: 700; color: var(--navy);
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--gold);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ===== FORM ===== */
+  .form-row { margin-bottom: 14px; }
+  .form-row label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--text2); margin-bottom: 5px;
+  }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 11px 14px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-family: inherit; font-size: 16px; color: var(--text);
+    background: var(--bg); transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .form-row input:focus, .form-row select:focus {
+    outline: none; border-color: var(--navy); background: var(--white);
+  }
+  .form-row.amount input { font-size: 20px; font-weight: 700; text-align: right; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
+  .radio-label {
+    flex: 1; min-width: 120px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px; border: 2px solid var(--border);
+    border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 500;
+    transition: all 0.2s; background: var(--bg);
+  }
+  .radio-label input { display: none; }
+  .radio-label.income { color: var(--green); }
+  .radio-label.expense { color: var(--red); }
+  .radio-label.income.checked { border-color: var(--green); background: #e8f5ef; }
+  .radio-label.expense.checked { border-color: var(--red); background: #fdf0ee; }
+  .radio-label.bank.checked { border-color: var(--navy); background: #e8f0f8; color: var(--navy); }
+  .radio-label.cash.checked { border-color: var(--gold); background: #fdf8e8; color: #8a6020; }
+  .submit-btn {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: white; border: none; border-radius: var(--radius);
+    font-family: inherit; font-size: 17px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; letter-spacing: 0.05em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(26,58,92,0.3);
+  }
+  .submit-btn:active { transform: scale(0.98); }
+
+  /* ===== LEDGER ===== */
+  .filter-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .filter-bar select, .filter-bar input {
+    padding: 9px 12px; border: 2px solid var(--border);
+    border-radius: 8px; font-family: inherit; font-size: 14px;
+    background: var(--white); flex: 1; min-width: 120px;
+    -webkit-appearance: none;
+  }
+  .ledger-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--navy); color: white; }
+  th { padding: 10px 8px; text-align: center; font-weight: 600; white-space: nowrap; }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: var(--bg2); }
+  .amount-income { color: var(--green); font-weight: 700; }
+  .amount-expense { color: var(--red); font-weight: 700; }
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge-bank { background: #dce8f8; color: var(--navy); }
+  .badge-cash { background: #fdf3d0; color: #8a6020; }
+  .balance-row { background: var(--bg2) !important; font-weight: 700; }
+
+  /* ===== SUMMARY ===== */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .summary-card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 16px; border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .summary-card .label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .summary-card .value { font-size: 22px; font-weight: 700; }
+  .summary-card.income .value { color: var(--green); }
+  .summary-card.expense .value { color: var(--red); }
+  .summary-card.balance .value { color: var(--navy); }
+  .month-table { font-size: 13px; }
+  .month-table th { background: var(--navy); color: white; padding: 8px 10px; }
+  .month-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .month-table tr:last-child td { font-weight: 700; background: var(--bg2); }
+
+  /* ===== REPORT ===== */
+  .report-header {
+    text-align: center; padding: 20px;
+    border: 3px double var(--navy); border-radius: var(--radius);
+    margin-bottom: 20px; background: var(--white);
+  }
+  .report-header h2 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 20px; color: var(--navy); margin-bottom: 6px;
+  }
+  .report-header p { color: var(--text2); font-size: 13px; }
+  .report-section { margin-bottom: 24px; }
+  .report-section h3 {
+    font-size: 15px; font-weight: 700; color: var(--navy);
+    padding: 8px 12px; background: var(--bg2);
+    border-left: 4px solid var(--gold);
+    margin-bottom: 10px; border-radius: 0 6px 6px 0;
+  }
+  .report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .report-table th { background: #e8eef5; padding: 8px 12px; text-align: left; color: var(--navy); font-weight: 600; }
+  .report-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .report-table .subtotal td { font-weight: 700; background: var(--bg2); border-top: 2px solid var(--navy); }
+  .report-table .total td { font-weight: 700; background: var(--navy); color: white; }
+  .text-right { text-align: right !important; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--navy); color: white; padding: 12px 24px;
+    border-radius: 24px; font-size: 14px; font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 1000;
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===== PRINT ===== */
+  @media print {
+    body { background: white; font-size: 11px; }
+    header, nav, .filter-bar, .submit-btn, .btn-primary, .btn-icon,
+    #loginScreen, .no-print { display: none !important; }
+    #app { display: block !important; }
+    main { padding: 0; max-width: 100%; }
+    .section { display: block !important; }
+    .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+    .report-header { border: 2px solid black; }
+  }
+
+  /* ===== EXPORT AREA ===== */
+  .export-bar {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .btn-export {
+    padding: 10px 18px; border: 2px solid var(--navy);
+    background: var(--white); color: var(--navy);
+    border-radius: 8px; font-family: inherit; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-export:hover { background: var(--navy); color: white; }
+  .btn-export.green { border-color: var(--green); color: var(--green); }
+  .btn-export.green:hover { background: var(--green); color: white; }
+  .btn-export.print { border-color: var(--text2); color: var(--text2); }
+  .btn-export.print:hover { background: var(--text2); color: white; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 48px 16px;
+    color: var(--text2);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">🏘️</div>
+      <h1>自治会・団体<br>会計システム</h1>
+      <p>AccountBook for Community</p>
+    </div>
+    <div class="form-group">
+      <label>団体ID</label>
+      <input type="text" id="loginOrgId" placeholder="例: jichikai-01" value="">
+    </div>
+    <div class="form-group">
+      <label>団体名</label>
+      <input type="text" id="loginOrgName" placeholder="例: ○○自治会" value="">
+    </div>
+    <div class="form-group">
+      <label>パスワード</label>
+      <input type="password" id="loginPassword" placeholder="パスワードを入力">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">ログイン・開始</button>
+    <p class="login-hint">初回は任意のIDと団体名を入力し、<br>パスワードを設定してください</p>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <header>
+    <div>
+      <h1>🏘️ 会計システム</h1>
+      <div class="org-name" id="headerOrgName"></div>
+    </div>
+    <div class="header-right">
+      <button class="btn-icon" onclick="changePassword()">🔑</button>
+      <button class="btn-icon" onclick="doLogout()">退出</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showSection('entry')">📝 入力</button>
+    <button class="nav-btn" onclick="showSection('ledger')">📒 出納帳</button>
+    <button class="nav-btn" onclick="showSection('monthly')">📊 月別集計</button>
+    <button class="nav-btn" onclick="showSection('subject')">📋 科目別</button>
+    <button class="nav-btn" onclick="showSection('report')">📑 決算報告</button>
+    <button class="nav-btn" onclick="showSection('settings')">⚙️ 設定</button>
+  </nav>
+
+  <main>
+
+    <!-- ===== ENTRY ===== -->
+    <div class="section active" id="section-entry">
+      <div class="card">
+        <div class="card-title">💴 取引入力</div>
+
+        <div class="form-row">
+          <label>収入・支出</label>
+          <div class="radio-group">
+            <label class="radio-label income checked" id="lbl-income">
+              <input type="radio" name="type" value="income" checked onchange="updateRadio()"> ▲ 収入
+            </label>
+            <label class="radio-label expense" id="lbl-expense">
+              <input type="radio" name="type" value="expense" onchange="updateRadio()"> ▼ 支出
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>日付</label>
+          <input type="date" id="entryDate">
+        </div>
+
+        <div class="form-row amount">
+          <label>金額（円）</label>
+          <input type="number" id="entryAmount" placeholder="0" min="0" inputmode="numeric">
+        </div>
+
+        <div class="form-row">
+          <label>摘要（内容）</label>
+          <input type="text" id="entryDesc" placeholder="例：4月分会費、〇〇修繕費">
+        </div>
+
+        <div class="form-row">
+          <label>勘定科目</label>
+          <select id="entrySubject">
+            <option value="">-- 選択してください --</option>
+            <optgroup label="収入科目">
+              <option value="会費">会費</option>
+              <option value="補助金・助成金">補助金・助成金</option>
+              <option value="寄付金">寄付金</option>
+              <option value="事業収入">事業収入</option>
+              <option value="雑収入">雑収入</option>
+              <option value="繰越金">繰越金</option>
+            </optgroup>
+            <optgroup label="支出科目">
+              <option value="会議費">会議費</option>
+              <option value="通信費">通信費</option>
+              <option value="印刷費">印刷費</option>
+              <option value="消耗品費">消耗品費</option>
+              <option value="修繕費">修繕費</option>
+              <option value="清掃費">清掃費</option>
+              <option value="備品費">備品費</option>
+              <option value="行事費">行事費</option>
+              <option value="慶弔費">慶弔費</option>
+              <option value="交通費">交通費</option>
+              <option value="保険料">保険料</option>
+              <option value="水道光熱費">水道光熱費</option>
+              <option value="雑費">雑費</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>伝票番号</label>
+          <input type="text" id="entryVoucherNo" placeholder="例: 2024-001（省略可）">
+        </div>
+
+        <div class="form-row">
+          <label>決済方法</label>
+          <div class="radio-group">
+            <label class="radio-label bank checked" id="lbl-bank">
+              <input type="radio" name="payment" value="bank" checked onchange="updateRadio()"> 🏦 銀行口座
+            </label>
+            <label class="radio-label cash" id="lbl-cash">
+              <input type="radio" name="payment" value="cash" onchange="updateRadio()"> 💴 現金
+            </label>
+          </div>
+        </div>
+
+        <button class="submit-btn" onclick="submitEntry()">✅ 登録する</button>
+      </div>
+    </div>
+
+    <!-- ===== LEDGER ===== -->
+    <div class="section" id="section-ledger">
+      <div class="card">
+        <div class="card-title">📒 金銭出納帳</div>
+        <div class="filter-bar">
+          <select id="filterYear" onchange="renderLedger()">
+            <option value="">年度を選択</option>
+          </select>
+          <select id="filterMonth" onchange="renderLedger()">
+            <option value="">全月</option>
+            <option value="4">4月</option><option value="5">5月</option>
+            <option value="6">6月</option><option value="7">7月</option>
+            <option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option>
+            <option value="12">12月</option><option value="1">1月</option>
+            <option value="2">2月</option><option value="3">3月</option>
+          </select>
+          <select id="filterType" onchange="renderLedger()">
+            <option value="">収入・支出</option>
+            <option value="income">収入</option>
+            <option value="expense">支出</option>
+          </select>
+        </div>
+        <div class="export-bar no-print">
+          <button class="btn-export green" onclick="exportCSV()">📥 CSVダウンロード</button>
+          <button class="btn-export print" onclick="window.print()">🖨️ 印刷</button>
+        </div>
+        <div class="ledger-table" id="ledgerTable"></div>
+      </div>
+    </div>
+
+    <!-- ===== MONTHLY ===== -->
+    <div class="section" id="section-monthly">
+      <div class="card">
+        <div class="card-title">📊 月別集計</div>
+        <div class="filter-bar">
+          <select id="monthlyYear" onchange="renderMonthly()">
+            <option value="">年度を選択</option>
+          </select>
+        </div>
+        <div class="export-bar no-print">
+          <button class="btn-export print" onclick="window.print()">🖨️ 印刷</button>
+        </div>
+        <div id="monthlySummary"></div>
+      </div>
+    </div>
+
+    <!-- ===== SUBJECT ===== -->
+    <div class="section" id="section-subject">
+      <div class="card">
+        <div class="card-title">📋 科目別集計</div>
+        <div class="filter-bar">
+          <select id="subjectYear" onchange="renderSubject()">
+            <option value="">年度を選択</option>
+          </select>
+        </div>
+        <div class="export-bar no-print">
+          <button class="btn-export print" onclick="window.print()">🖨️ 印刷</button>
+        </div>
+        <div id="subjectSummary"></div>
+      </div>
+    </div>
+
+    <!-- ===== REPORT ===== -->
+    <div class="section" id="section-report">
+      <div class="card">
+        <div class="card-title">📑 決算報告書</div>
+        <div class="filter-bar">
+          <select id="reportYear" onchange="renderReport()">
+            <option value="">年度を選択</option>
+          </select>
+        </div>
+        <div class="export-bar no-print">
+          <button class="btn-export print" onclick="window.print()">🖨️ 印刷・PDF保存</button>
+        </div>
+        <div id="reportContent"></div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="section" id="section-settings">
+
+      <!-- 勘定科目管理 -->
+      <div class="card">
+        <div class="card-title">📋 勘定科目の管理</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">自団体に合わせて科目を追加・削除できます。</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div style="font-weight:700;color:var(--green);margin-bottom:10px;font-size:14px;">▲ 収入科目</div>
+            <div id="incomeSubjectList" style="margin-bottom:12px;"></div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="newIncomeSubject" placeholder="新しい科目名" style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
+              <button onclick="addSubject('income')" style="padding:9px 14px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;font-size:18px;font-weight:700;">＋</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-weight:700;color:var(--red);margin-bottom:10px;font-size:14px;">▼ 支出科目</div>
+            <div id="expenseSubjectList" style="margin-bottom:12px;"></div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="newExpenseSubject" placeholder="新しい科目名" style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
+              <button onclick="addSubject('expense')" style="padding:9px 14px;background:var(--red);color:white;border:none;border-radius:8px;cursor:pointer;font-size:18px;font-weight:700;">＋</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- データ管理 -->
+      <div class="card">
+        <div class="card-title">🗂️ データ管理</div>
+
+        <div style="margin-bottom:20px;">
+          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">テストデータ・全データの消去</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+            入力したデータをまとめて削除できます。<strong style="color:var(--red)">削除後は元に戻せません。</strong>
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="clearCurrentYear()" style="padding:12px 16px;background:var(--bg);border:2px solid var(--gold);color:#8a6020;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+              📅 今年度のデータを消去
+            </button>
+            <button onclick="clearAllEntries()" style="padding:12px 16px;background:var(--bg);border:2px solid var(--red);color:var(--red);border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+              🗑️ 全データを消去（テスト後リセット）
+            </button>
+          </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+
+        <div>
+          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">パスワード変更</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="password" id="newPw1" placeholder="新パスワード" style="flex:1;min-width:140px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:16px;font-family:inherit;">
+            <input type="password" id="newPw2" placeholder="確認（再入力）" style="flex:1;min-width:140px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:16px;font-family:inherit;">
+            <button onclick="changePwForm()" style="padding:10px 18px;background:var(--navy);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">変更</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== CONFIRM MODAL ===== -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:white;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="font-size:28px;text-align:center;margin-bottom:12px;">⚠️</div>
+    <p id="confirmMsg" style="font-size:15px;color:#2a2520;white-space:pre-line;text-align:center;margin-bottom:24px;line-height:1.7;"></p>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeConfirmModal()" style="flex:1;padding:13px;border:2px solid #d0c8b8;background:#f4f1eb;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;color:#5a5550;font-weight:600;">キャンセル</button>
+      <button id="confirmOkBtn" onclick="doConfirmOk()" style="flex:1;padding:13px;border:none;background:#c0392b;color:white;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;font-weight:700;">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS PASSWORD MODAL ===== -->
+<div id="settingsPwModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:white;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="font-size:28px;text-align:center;margin-bottom:8px;">🔒</div>
+    <h3 style="text-align:center;color:#1a3a5c;margin-bottom:6px;font-size:17px;">設定画面の認証</h3>
+    <p style="text-align:center;font-size:13px;color:#5a5550;margin-bottom:20px;">パスワードを入力してください</p>
+    <input type="password" id="settingsPwInput" placeholder="パスワード"
+      style="width:100%;padding:13px 14px;border:2px solid #d0c8b8;border-radius:10px;font-size:16px;font-family:inherit;margin-bottom:14px;"
+      onkeydown="if(event.key==='Enter')checkSettingsPassword()">
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeSettingsPwModal()" style="flex:1;padding:13px;border:2px solid #d0c8b8;background:#f4f1eb;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;color:#5a5550;font-weight:600;">戻る</button>
+      <button onclick="checkSettingsPassword()" style="flex:1;padding:13px;border:none;background:#1a3a5c;color:white;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;font-weight:700;">認証する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================
+//   SUBJECTS
+// ============================
+const DEFAULT_SUBJECTS = {
+  income: ['会費','補助金・助成金','寄付金','事業収入','雑収入','繰越金'],
+  expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','水道光熱費','雑費']
+};
+
+function getSubjects() {
+  const key = 'subjects_' + currentOrg;
+  const raw = localStorage.getItem(key);
+  return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+}
+function saveSubjects(subs) {
+  localStorage.setItem('subjects_' + currentOrg, JSON.stringify(subs));
+}
+function addSubject(type) {
+  const inp = document.getElementById(type === 'income' ? 'newIncomeSubject' : 'newExpenseSubject');
+  const name = inp.value.trim();
+  if (!name) { showToast('科目名を入力してください'); return; }
+  const subs = getSubjects();
+  if (subs[type].includes(name)) { showToast('すでに登録されています'); return; }
+  subs[type].push(name);
+  saveSubjects(subs);
+  inp.value = '';
+  renderSubjectSettings();
+  rebuildSubjectSelect();
+  showToast('✅ 科目を追加しました');
+}
+function removeSubject(type, name) {
+  if (!confirm(`「${name}」を削除しますか？\n（入力済みデータには影響しません）`)) return;
+  const subs = getSubjects();
+  subs[type] = subs[type].filter(s => s !== name);
+  saveSubjects(subs);
+  renderSubjectSettings();
+  rebuildSubjectSelect();
+  showToast('削除しました');
+}
+function renderSubjectSettings() {
+  const subs = getSubjects();
+  ['income','expense'].forEach(type => {
+    const div = document.getElementById(type + 'SubjectList');
+    if (!div) return;
+    div.innerHTML = subs[type].map((s, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;
+        padding:7px 10px;border:1px solid var(--border);border-radius:8px;
+        margin-bottom:6px;background:var(--bg);font-size:14px;">
+        <span>${s}</span>
+        <button data-type="${type}" data-idx="${i}"
+          class="sub-del-btn"
+          style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 8px;line-height:1;">✕</button>
+      </div>`).join('');
+  });
+  // attach events after rendering
+  document.querySelectorAll('.sub-del-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const type = this.getAttribute('data-type');
+      const idx = parseInt(this.getAttribute('data-idx'));
+      const subs = getSubjects();
+      const name = subs[type][idx];
+      showConfirmModal(`「${name}」を削除しますか？\n（入力済みデータには影響しません）`, () => {
+        const s2 = getSubjects();
+        s2[type].splice(idx, 1);
+        saveSubjects(s2);
+        renderSubjectSettings();
+        rebuildSubjectSelect();
+        showToast('削除しました');
+      }, '削除する');
+    });
+  });
+}
+function rebuildSubjectSelect() {
+  const subs = getSubjects();
+  const sel = document.getElementById('entrySubject');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 選択してください --</option>' +
+    `<optgroup label="収入科目">${subs.income.map(s=>`<option value="${s}">${s}</option>`).join('')}</optgroup>` +
+    `<optgroup label="支出科目">${subs.expense.map(s=>`<option value="${s}">${s}</option>`).join('')}</optgroup>`;
+  if (cur) sel.value = cur;
+}
+
+// ============================
+//   DATA CLEAR
+// ============================
+function clearAllEntries() {
+  const count = getEntries().length;
+  showConfirmModal(
+    `全データ（${count}件）を削除します。\nこの操作は取り消せません。\n\nよろしいですか？`,
+    () => {
+      allData[currentOrg].entries = [];
+      saveAll();
+      populateYearSelects();
+      renderSubjectSettings();
+      showToast('🗑️ 全データを消去しました');
+    },
+    '全削除する'
+  );
+}
+function clearCurrentYear() {
+  const year = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  const count = getEntries().filter(e => getFiscalYear(e.date) == year).length;
+  showConfirmModal(
+    `${year}年度のデータ（${count}件）を削除します。\nよろしいですか？`,
+    () => {
+      allData[currentOrg].entries = getEntries().filter(e => getFiscalYear(e.date) != year);
+      saveAll();
+      populateYearSelects();
+      showToast(`🗑️ ${year}年度のデータを消去しました`);
+    },
+    '削除する'
+  );
+}
+
+// ============================
+//   CHANGE PASSWORD (form)
+// ============================
+function changePwForm() {
+  const p1 = document.getElementById('newPw1').value;
+  const p2 = document.getElementById('newPw2').value;
+  if (!p1) { showToast('新パスワードを入力してください'); return; }
+  if (p1 !== p2) { showToast('パスワードが一致しません'); return; }
+  allData[currentOrg].password = p1;
+  saveAll();
+  document.getElementById('newPw1').value = '';
+  document.getElementById('newPw2').value = '';
+  showToast('✅ パスワードを変更しました');
+}
+
+let currentOrg = null;
+let allData = {}; // { orgId: { password, orgName, entries:[] } }
+
+function loadAll() {
+  const raw = localStorage.getItem('accounting_v2');
+  if (raw) allData = JSON.parse(raw);
+}
+function saveAll() {
+  localStorage.setItem('accounting_v2', JSON.stringify(allData));
+}
+function getEntries() {
+  return allData[currentOrg]?.entries || [];
+}
+function addEntry(entry) {
+  allData[currentOrg].entries.push(entry);
+  saveAll();
+}
+function deleteEntry(id) {
+  allData[currentOrg].entries = allData[currentOrg].entries.filter(e => e.id !== id);
+  saveAll();
+}
+
+// 会計年度判定（4月〜翌3月）
+function getFiscalYear(dateStr) {
+  const d = new Date(dateStr);
+  const m = d.getMonth() + 1;
+  const y = d.getFullYear();
+  return m >= 4 ? y : y - 1;
+}
+function getFiscalYears() {
+  const entries = getEntries();
+  const years = new Set(entries.map(e => getFiscalYear(e.date)));
+  const thisYear = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  years.add(thisYear);
+  return Array.from(years).sort().reverse();
+}
+function getYearLabel(y) { return `${y}年度（${y}/4/1 〜 ${+y+1}/3/31）`; }
+
+// ============================
+//   LOGIN / LOGOUT
+// ============================
+loadAll();
+
+function doLogin() {
+  const orgId = document.getElementById('loginOrgId').value.trim();
+  const orgName = document.getElementById('loginOrgName').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  if (!orgId || !orgName) { showToast('団体IDと団体名を入力してください'); return; }
+  if (!pw) { showToast('パスワードを入力してください'); return; }
+
+  if (!allData[orgId]) {
+    // 新規登録
+    allData[orgId] = { password: pw, orgName: orgName, entries: [] };
+    saveAll();
+    showToast('新規団体を作成しました');
+  } else {
+    if (allData[orgId].password !== pw) { showToast('パスワードが違います'); return; }
+    if (orgName) allData[orgId].orgName = orgName;
+  }
+  currentOrg = orgId;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('headerOrgName').textContent = allData[currentOrg].orgName + ' [' + orgId + ']';
+  initApp();
+}
+
+function doLogout() {
+  if (!confirm('ログアウトしますか？')) return;
+  currentOrg = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+}
+
+function changePassword() {
+  const np = prompt('新しいパスワードを入力してください:');
+  if (!np) return;
+  allData[currentOrg].password = np;
+  saveAll();
+  showToast('パスワードを変更しました');
+}
+
+// ============================
+//   INIT
+// ============================
+function initApp() {
+  setTodayDate();
+  populateYearSelects();
+  rebuildSubjectSelect();
+  renderLedger();
+}
+
+function setTodayDate() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('entryDate').value = today;
+}
+
+function populateYearSelects() {
+  const years = getFiscalYears();
+  ['filterYear','monthlyYear','subjectYear','reportYear'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">年度を選択</option>';
+    years.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = getYearLabel(y);
+      sel.appendChild(opt);
+    });
+    if (years.length > 0) sel.value = years[0];
+    else if (cur) sel.value = cur;
+  });
+}
+
+// ============================
+//   NAVIGATION - handled above in MODAL HELPERS
+// ============================
+
+// ============================
+//   RADIO STYLING
+// ============================
+function updateRadio() {
+  const typeVal = document.querySelector('input[name="type"]:checked')?.value;
+  const payVal = document.querySelector('input[name="payment"]:checked')?.value;
+  document.getElementById('lbl-income').classList.toggle('checked', typeVal === 'income');
+  document.getElementById('lbl-expense').classList.toggle('checked', typeVal === 'expense');
+  document.getElementById('lbl-bank').classList.toggle('checked', payVal === 'bank');
+  document.getElementById('lbl-cash').classList.toggle('checked', payVal === 'cash');
+}
+
+// ============================
+//   ENTRY SUBMIT
+// ============================
+function submitEntry() {
+  const type = document.querySelector('input[name="type"]:checked')?.value;
+  const date = document.getElementById('entryDate').value;
+  const amount = parseInt(document.getElementById('entryAmount').value);
+  const desc = document.getElementById('entryDesc').value.trim();
+  const subject = document.getElementById('entrySubject').value;
+  const voucherNo = document.getElementById('entryVoucherNo').value.trim();
+  const payment = document.querySelector('input[name="payment"]:checked')?.value;
+
+  if (!date) { showToast('日付を入力してください'); return; }
+  if (!amount || amount <= 0) { showToast('金額を入力してください'); return; }
+  if (!desc) { showToast('摘要を入力してください'); return; }
+  if (!subject) { showToast('勘定科目を選択してください'); return; }
+
+  const entry = {
+    id: Date.now().toString(),
+    type, date, amount, desc, subject, voucherNo, payment,
+    createdAt: new Date().toISOString()
+  };
+  addEntry(entry);
+  populateYearSelects();
+  showToast('✅ 登録しました');
+  clearForm();
+}
+
+function clearForm() {
+  document.getElementById('entryAmount').value = '';
+  document.getElementById('entryDesc').value = '';
+  document.getElementById('entrySubject').value = '';
+  document.getElementById('entryVoucherNo').value = '';
+  setTodayDate();
+}
+
+// ============================
+//   LEDGER
+// ============================
+function renderLedger() {
+  const year = document.getElementById('filterYear')?.value;
+  const month = document.getElementById('filterMonth')?.value;
+  const type = document.getElementById('filterType')?.value;
+  let entries = getEntries().filter(e => {
+    if (year && getFiscalYear(e.date) != year) return false;
+    if (month) {
+      const m = new Date(e.date).getMonth() + 1;
+      if (m != month) return false;
+    }
+    if (type && e.type !== type) return false;
+    return true;
+  }).sort((a,b) => a.date.localeCompare(b.date));
+
+  const tbl = document.getElementById('ledgerTable');
+  if (!entries.length) {
+    tbl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>データがありません</p></div>`;
+    return;
+  }
+
+  let balance = 0;
+  let html = `<table>
+    <thead><tr>
+      <th>日付</th><th>摘要</th><th>科目</th><th>伝票No</th>
+      <th>収入</th><th>支出</th><th>決済</th><th>残高</th><th class="no-print">削除</th>
+    </tr></thead><tbody>`;
+  entries.forEach(e => {
+    const inc = e.type === 'income' ? e.amount : 0;
+    const exp = e.type === 'expense' ? e.amount : 0;
+    balance += inc - exp;
+    html += `<tr>
+      <td>${e.date}</td>
+      <td>${e.desc}</td>
+      <td>${e.subject}</td>
+      <td>${e.voucherNo || ''}</td>
+      <td class="text-right ${e.type==='income'?'amount-income':''}">${inc?'¥'+inc.toLocaleString():''}</td>
+      <td class="text-right ${e.type==='expense'?'amount-expense':''}">${exp?'¥'+exp.toLocaleString():''}</td>
+      <td><span class="badge badge-${e.payment}">${e.payment==='bank'?'銀行':'現金'}</span></td>
+      <td class="text-right">${balance<0?'△':''}<strong>¥${Math.abs(balance).toLocaleString()}</strong></td>
+      <td class="no-print"><button onclick="confirmDelete('${e.id}')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:20px;padding:4px 8px;">🗑️</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  tbl.innerHTML = html;
+}
+
+function confirmDelete(id) {
+  const entry = getEntries().find(e => e.id === id);
+  if (!entry) return;
+  showConfirmModal(
+    `この伝票を削除しますか？\n\n日付：${entry.date}\n摘要：${entry.desc}\n金額：¥${entry.amount.toLocaleString()}`,
+    () => {
+      allData[currentOrg].entries = allData[currentOrg].entries.filter(e => e.id !== id);
+      saveAll();
+      renderLedger();
+      showToast('🗑️ 削除しました');
+    },
+    '削除する'
+  );
+}
+
+function deleteEntry(id) {
+  allData[currentOrg].entries = allData[currentOrg].entries.filter(e => e.id !== id);
+  saveAll();
+}
+
+// ============================
+//   MONTHLY SUMMARY
+// ============================
+const MONTHS = [4,5,6,7,8,9,10,11,12,1,2,3];
+const MONTH_LABELS = ['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月'];
+
+function renderMonthly() {
+  const year = document.getElementById('monthlyYear')?.value;
+  if (!year) return;
+  const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
+
+  let totalInc = 0, totalExp = 0;
+  const rows = MONTHS.map((m, i) => {
+    const me = entries.filter(e => new Date(e.date).getMonth()+1 === m);
+    const inc = me.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+    const exp = me.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+    totalInc += inc; totalExp += exp;
+    return { label: MONTH_LABELS[i], inc, exp, bal: inc - exp };
+  });
+
+  const totalBal = totalInc - totalExp;
+  const div = document.getElementById('monthlySummary');
+  div.innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-card income">
+        <div class="label">年度収入合計</div>
+        <div class="value">¥${totalInc.toLocaleString()}</div>
+      </div>
+      <div class="summary-card expense">
+        <div class="label">年度支出合計</div>
+        <div class="value">¥${totalExp.toLocaleString()}</div>
+      </div>
+      <div class="summary-card balance" style="grid-column:1/-1">
+        <div class="label">収支差額</div>
+        <div class="value" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">
+          ${totalBal<0?'△':''}¥${Math.abs(totalBal).toLocaleString()}
+        </div>
+      </div>
+    </div>
+    <div class="ledger-table">
+    <table class="month-table">
+      <thead><tr><th>月</th><th class="text-right">収入</th><th class="text-right">支出</th><th class="text-right">差引残高</th></tr></thead>
+      <tbody>
+      ${rows.map(r=>`<tr>
+        <td>${r.label}</td>
+        <td class="text-right amount-income">${r.inc?'¥'+r.inc.toLocaleString():'-'}</td>
+        <td class="text-right amount-expense">${r.exp?'¥'+r.exp.toLocaleString():'-'}</td>
+        <td class="text-right" style="font-weight:600;color:${r.bal>=0?'var(--green)':'var(--red)'}">${r.bal===0?'-':(r.bal<0?'△':'')+'¥'+Math.abs(r.bal).toLocaleString()}</td>
+      </tr>`).join('')}
+      <tr style="font-weight:700;background:var(--bg2);border-top:2px solid var(--navy)">
+        <td>合計</td>
+        <td class="text-right amount-income">¥${totalInc.toLocaleString()}</td>
+        <td class="text-right amount-expense">¥${totalExp.toLocaleString()}</td>
+        <td class="text-right" style="font-weight:700;color:${totalBal>=0?'var(--green)':'var(--red)'}">
+          ${totalBal<0?'△':''}¥${Math.abs(totalBal).toLocaleString()}
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    </div>`;
+}
+
+// ============================
+//   SUBJECT SUMMARY
+// ============================
+function renderSubject() {
+  const year = document.getElementById('subjectYear')?.value;
+  if (!year) return;
+  const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
+  const subjects = {};
+  entries.forEach(e => {
+    if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0, type: e.type };
+    if (e.type === 'income') subjects[e.subject].income += e.amount;
+    else subjects[e.subject].expense += e.amount;
+  });
+
+  const incSubs = Object.entries(subjects).filter(([_,v])=>v.income>0);
+  const expSubs = Object.entries(subjects).filter(([_,v])=>v.expense>0);
+  const totalInc = incSubs.reduce((s,[_,v])=>s+v.income,0);
+  const totalExp = expSubs.reduce((s,[_,v])=>s+v.expense,0);
+
+  const div = document.getElementById('subjectSummary');
+  div.innerHTML = `
+    <div class="report-section">
+      <h3>📈 収入科目別</h3>
+      <div class="ledger-table"><table class="report-table">
+        <thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead>
+        <tbody>
+        ${incSubs.map(([k,v])=>`<tr><td>${k}</td>
+          <td class="text-right amount-income">¥${v.income.toLocaleString()}</td>
+          <td class="text-right">${totalInc?Math.round(v.income/totalInc*100):0}%</td></tr>`).join('')}
+        <tr class="subtotal"><td>合計</td><td class="text-right amount-income">¥${totalInc.toLocaleString()}</td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="report-section">
+      <h3>📉 支出科目別</h3>
+      <div class="ledger-table"><table class="report-table">
+        <thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead>
+        <tbody>
+        ${expSubs.map(([k,v])=>`<tr><td>${k}</td>
+          <td class="text-right amount-expense">¥${v.expense.toLocaleString()}</td>
+          <td class="text-right">${totalExp?Math.round(v.expense/totalExp*100):0}%</td></tr>`).join('')}
+        <tr class="subtotal"><td>合計</td><td class="text-right amount-expense">¥${totalExp.toLocaleString()}</td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>`;
+}
+
+// ============================
+//   REPORT
+// ============================
+function renderReport() {
+  const year = document.getElementById('reportYear')?.value;
+  if (!year) return;
+  const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
+  const orgName = allData[currentOrg]?.orgName || '';
+
+  const subjects = {};
+  entries.forEach(e => {
+    if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
+    if (e.type === 'income') subjects[e.subject].income += e.amount;
+    else subjects[e.subject].expense += e.amount;
+  });
+
+  const incSubs = Object.entries(subjects).filter(([_,v])=>v.income>0);
+  const expSubs = Object.entries(subjects).filter(([_,v])=>v.expense>0);
+  const totalInc = incSubs.reduce((s,[_,v])=>s+v.income,0);
+  const totalExp = expSubs.reduce((s,[_,v])=>s+v.expense,0);
+  const balance = totalInc - totalExp;
+
+  document.getElementById('reportContent').innerHTML = `
+    <div class="report-header">
+      <h2>${orgName}</h2>
+      <h2>${year}年度　決算報告書</h2>
+      <p>会計年度：${year}年4月1日 〜 ${+year+1}年3月31日</p>
+    </div>
+
+    <div class="report-section">
+      <h3>【収入の部】</h3>
+      <div class="ledger-table"><table class="report-table">
+        <thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead>
+        <tbody>
+        ${incSubs.map(([k,v])=>`<tr><td>　${k}</td><td class="text-right">-</td><td class="text-right amount-income">¥${v.income.toLocaleString()}</td><td></td></tr>`).join('')}
+        <tr class="subtotal"><td><strong>収入合計</strong></td><td class="text-right">-</td><td class="text-right amount-income"><strong>¥${totalInc.toLocaleString()}</strong></td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="report-section">
+      <h3>【支出の部】</h3>
+      <div class="ledger-table"><table class="report-table">
+        <thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead>
+        <tbody>
+        ${expSubs.map(([k,v])=>`<tr><td>　${k}</td><td class="text-right">-</td><td class="text-right amount-expense">¥${v.expense.toLocaleString()}</td><td></td></tr>`).join('')}
+        <tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right">-</td><td class="text-right amount-expense"><strong>¥${totalExp.toLocaleString()}</strong></td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="ledger-table"><table class="report-table">
+      <tr class="total">
+        <td><strong>【収支差額】（収入合計 − 支出合計）</strong></td>
+        <td class="text-right"><strong>${balance<0?'△':''}¥${Math.abs(balance).toLocaleString()}</strong></td>
+      </tr>
+    </table></div>
+
+    <div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">
+      以上のとおり${year}年度の会計を報告いたします。<br><br>
+      <div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px">
+        <span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
+        <span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
+      </div>
+    </div>`;
+}
+
+// ============================
+//   CSV EXPORT
+// ============================
+function exportCSV() {
+  const year = document.getElementById('filterYear')?.value;
+  let entries = getEntries();
+  if (year) entries = entries.filter(e => getFiscalYear(e.date) == year);
+  entries.sort((a,b) => a.date.localeCompare(b.date));
+
+  const header = ['日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別'];
+  const rows = entries.map(e => [
+    e.date, e.desc, e.subject, e.voucherNo||'',
+    e.type==='income'?e.amount:'',
+    e.type==='expense'?e.amount:'',
+    e.payment==='bank'?'銀行口座':'現金',
+    e.type==='income'?'収入':'支出'
+  ]);
+  const csv = [header, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `会計データ_${year||'全期間'}.csv`;
+  a.click();
+  showToast('CSVをダウンロードしました');
+}
+
+// ============================
+//   MODAL HELPERS
+// ============================
+let confirmCallback = null;
+
+function showConfirmModal(msg, onOk, okLabel) {
+  confirmCallback = onOk;
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmOkBtn').textContent = okLabel || '削除する';
+  document.getElementById('confirmModal').style.display = 'flex';
+}
+function closeConfirmModal() {
+  document.getElementById('confirmModal').style.display = 'none';
+  confirmCallback = null;
+}
+function doConfirmOk() {
+  const cb = confirmCallback;
+  closeConfirmModal();
+  if (cb) cb();
+}
+
+// ===== SETTINGS PASSWORD GATE =====
+let settingsUnlocked = false;
+function showSection(name) {
+  if (name === 'settings' && !settingsUnlocked) {
+    document.getElementById('settingsPwInput').value = '';
+    document.getElementById('settingsPwModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('settingsPwInput').focus(), 100);
+    return;
+  }
+  _doShowSection(name);
+}
+function checkSettingsPassword() {
+  const pw = document.getElementById('settingsPwInput').value;
+  if (pw === allData[currentOrg].password) {
+    settingsUnlocked = true;
+    closeSettingsPwModal();
+    _doShowSection('settings');
+    showToast('✅ 設定画面を開きました');
+  } else {
+    showToast('パスワードが違います');
+    document.getElementById('settingsPwInput').value = '';
+    document.getElementById('settingsPwInput').focus();
+  }
+}
+function closeSettingsPwModal() {
+  document.getElementById('settingsPwModal').style.display = 'none';
+}
+function _doShowSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  // find and activate correct nav button
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+name+"'")) b.classList.add('active');
+  });
+  if (name === 'ledger') renderLedger();
+  if (name === 'monthly') renderMonthly();
+  if (name === 'subject') renderSubject();
+  if (name === 'report') renderReport();
+  if (name === 'settings') renderSubjectSettings();
+  // lock settings again when leaving
+  if (name !== 'settings') settingsUnlocked = false;
+}
+
+// ============================
+//   TOAST
+// ============================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
