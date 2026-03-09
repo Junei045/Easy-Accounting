@@ -407,7 +407,7 @@
               <option value="慶弔費">慶弔費</option>
               <option value="交通費">交通費</option>
               <option value="保険料">保険料</option>
-              <option value="水道光熱費">水道光熱費</option>
+              <option value="光熱費">光熱費</option>
               <option value="雑費">雑費</option>
             </optgroup>
           </select>
@@ -436,8 +436,33 @@
 
     <!-- ===== LEDGER ===== -->
     <div class="section" id="section-ledger">
-      <div class="card">
-        <div class="card-title">📒 金銭出納帳</div>
+
+      <!-- 残高サマリー -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div style="background:linear-gradient(135deg,#1a3a5c,#2a5080);border-radius:var(--radius);padding:14px 16px;color:white;">
+          <div style="font-size:11px;opacity:0.8;margin-bottom:4px;">🏦 銀行口座 残高</div>
+          <div id="balanceBankDisp" style="font-size:22px;font-weight:700;">¥0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#8a6020,#c8a84b);border-radius:var(--radius);padding:14px 16px;color:white;">
+          <div style="font-size:11px;opacity:0.8;margin-bottom:4px;">💴 現金 残高</div>
+          <div id="balanceCashDisp" style="font-size:22px;font-weight:700;">¥0</div>
+        </div>
+      </div>
+
+      <!-- タブ切り替え -->
+      <div style="display:flex;gap:0;margin-bottom:0;border-radius:var(--radius) var(--radius) 0 0;overflow:hidden;border:2px solid var(--border);border-bottom:none;">
+        <button id="tabBank" onclick="switchLedgerTab('bank')"
+          style="flex:1;padding:13px;background:var(--navy);color:white;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
+          🏦 銀行口座出納帳
+        </button>
+        <button id="tabCash" onclick="switchLedgerTab('cash')"
+          style="flex:1;padding:13px;background:var(--bg2);color:var(--text2);border:none;border-left:2px solid var(--border);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+          💴 現金出納帳
+        </button>
+      </div>
+
+      <div class="card" style="border-radius:0 0 var(--radius) var(--radius);margin-bottom:16px;border-top:none;">
+        <div id="ledgerTabLabel" class="card-title">🏦 銀行口座出納帳</div>
         <div class="filter-bar">
           <select id="filterYear" onchange="renderLedger()">
             <option value="">年度を選択</option>
@@ -613,7 +638,7 @@
 // ============================
 const DEFAULT_SUBJECTS = {
   income: ['会費','補助金・助成金','寄付金','事業収入','雑収入','繰越金'],
-  expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','水道光熱費','雑費']
+  expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','光熱費','雑費']
 };
 
 function getSubjects() {
@@ -869,6 +894,14 @@ function updateRadio() {
 // ============================
 //   ENTRY SUBMIT
 // ============================
+// 収入科目・支出科目の定義（矛盾チェック用）
+function getSubjectType(subjectName) {
+  const subs = getSubjects();
+  if (subs.income.includes(subjectName)) return 'income';
+  if (subs.expense.includes(subjectName)) return 'expense';
+  return null; // どちらにも属さない（カスタム科目など）
+}
+
 function submitEntry() {
   const type = document.querySelector('input[name="type"]:checked')?.value;
   const date = document.getElementById('entryDate').value;
@@ -883,6 +916,24 @@ function submitEntry() {
   if (!desc) { showToast('摘要を入力してください'); return; }
   if (!subject) { showToast('勘定科目を選択してください'); return; }
 
+  // ===== 矛盾チェック =====
+  const subjectType = getSubjectType(subject);
+  if (subjectType && subjectType !== type) {
+    const typeLabel = type === 'income' ? '収入' : '支出';
+    const subjectTypeLabel = subjectType === 'income' ? '収入科目' : '支出科目';
+    showConfirmModal(
+      `⚠️ 入力内容に矛盾があります\n\n「${subject}」は${subjectTypeLabel}ですが、\n「${typeLabel}」として登録しようとしています。\n\nこのまま登録しますか？`,
+      () => doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment),
+      'このまま登録する',
+      '#e67e22'
+    );
+    return;
+  }
+
+  doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment);
+}
+
+function doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment) {
   const entry = {
     id: Date.now().toString(),
     type, date, amount, desc, subject, voucherNo, payment,
@@ -903,13 +954,44 @@ function clearForm() {
 }
 
 // ============================
+//   LEDGER TAB
+// ============================
+let currentLedgerTab = 'bank'; // 'bank' or 'cash'
+
+function switchLedgerTab(tab) {
+  currentLedgerTab = tab;
+  const isBank = tab === 'bank';
+  document.getElementById('tabBank').style.background = isBank ? 'var(--navy)' : 'var(--bg2)';
+  document.getElementById('tabBank').style.color = isBank ? 'white' : 'var(--text2)';
+  document.getElementById('tabCash').style.background = isBank ? 'var(--bg2)' : '#8a6020';
+  document.getElementById('tabCash').style.color = isBank ? 'var(--text2)' : 'white';
+  document.getElementById('ledgerTabLabel').textContent = isBank ? '🏦 銀行口座出納帳' : '💴 現金出納帳';
+  renderLedger();
+}
+
+function updateBalanceDisplay() {
+  const entries = getEntries().sort((a,b) => a.date.localeCompare(b.date));
+  let bank = 0, cash = 0;
+  entries.forEach(e => {
+    const v = e.type === 'income' ? e.amount : -e.amount;
+    if (e.payment === 'bank') bank += v;
+    else cash += v;
+  });
+  const fmt = v => (v < 0 ? '△' : '') + '¥' + Math.abs(v).toLocaleString();
+  document.getElementById('balanceBankDisp').textContent = fmt(bank);
+  document.getElementById('balanceCashDisp').textContent = fmt(cash);
+}
+
+// ============================
 //   LEDGER
 // ============================
 function renderLedger() {
+  updateBalanceDisplay();
   const year = document.getElementById('filterYear')?.value;
   const month = document.getElementById('filterMonth')?.value;
   const type = document.getElementById('filterType')?.value;
   let entries = getEntries().filter(e => {
+    if (e.payment !== currentLedgerTab) return false;
     if (year && getFiscalYear(e.date) != year) return false;
     if (month) {
       const m = new Date(e.date).getMonth() + 1;
@@ -929,7 +1011,7 @@ function renderLedger() {
   let html = `<table>
     <thead><tr>
       <th>日付</th><th>摘要</th><th>科目</th><th>伝票No</th>
-      <th>収入</th><th>支出</th><th>決済</th><th>残高</th><th class="no-print">削除</th>
+      <th>収入</th><th>支出</th><th>残高</th><th class="no-print">削除</th>
     </tr></thead><tbody>`;
   entries.forEach(e => {
     const inc = e.type === 'income' ? e.amount : 0;
@@ -942,7 +1024,6 @@ function renderLedger() {
       <td>${e.voucherNo || ''}</td>
       <td class="text-right ${e.type==='income'?'amount-income':''}">${inc?'¥'+inc.toLocaleString():''}</td>
       <td class="text-right ${e.type==='expense'?'amount-expense':''}">${exp?'¥'+exp.toLocaleString():''}</td>
-      <td><span class="badge badge-${e.payment}">${e.payment==='bank'?'銀行':'現金'}</span></td>
       <td class="text-right">${balance<0?'△':''}<strong>¥${Math.abs(balance).toLocaleString()}</strong></td>
       <td class="no-print"><button onclick="confirmDelete('${e.id}')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:20px;padding:4px 8px;">🗑️</button></td>
     </tr>`;
@@ -1178,10 +1259,12 @@ function exportCSV() {
 // ============================
 let confirmCallback = null;
 
-function showConfirmModal(msg, onOk, okLabel) {
+function showConfirmModal(msg, onOk, okLabel, okColor) {
   confirmCallback = onOk;
   document.getElementById('confirmMsg').textContent = msg;
-  document.getElementById('confirmOkBtn').textContent = okLabel || '削除する';
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.textContent = okLabel || '削除する';
+  okBtn.style.background = okColor || '#c0392b';
   document.getElementById('confirmModal').style.display = 'flex';
 }
 function closeConfirmModal() {
