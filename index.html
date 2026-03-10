@@ -484,6 +484,8 @@
         </div>
         <div class="export-bar no-print">
           <button class="btn-export green" onclick="exportCSV()">📥 CSVダウンロード</button>
+          <button class="btn-export" onclick="document.getElementById('csvImportFile').click()" style="border-color:var(--navy);color:var(--navy);">📤 CSVインポート</button>
+          <input type="file" id="csvImportFile" accept=".csv" style="display:none" onchange="importCSV(this)">
           <button class="btn-export print" onclick="window.print()">🖨️ 印刷</button>
         </div>
         <div class="ledger-table" id="ledgerTable"></div>
@@ -587,8 +589,24 @@
       <div class="card">
         <div class="card-title">🗂️ データ管理</div>
 
+        <!-- CSVインポート -->
         <div style="margin-bottom:20px;">
-          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">テストデータ・全データの消去</div>
+          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">📤 CSVインポート（担当者引き継ぎ・端末移行）</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+            別の端末やブラウザからエクスポートしたCSVファイルを読み込んでデータを復元します。<br>
+            <strong style="color:var(--navy)">※このシステムでエクスポートしたCSVのみ対応しています。</strong>
+          </p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button onclick="document.getElementById('csvImportFileSetting').click()"
+              style="padding:12px 16px;background:var(--bg);border:2px solid var(--navy);color:var(--navy);border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+              📤 CSVファイルを選択してインポート
+            </button>
+            <input type="file" id="csvImportFileSetting" accept=".csv" style="display:none" onchange="importCSV(this)">
+          </div>
+          <div id="importResult" style="margin-top:10px;font-size:13px;"></div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
           <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
             入力したデータをまとめて削除できます。<strong style="color:var(--red)">削除後は元に戻せません。</strong>
           </p>
@@ -1502,6 +1520,132 @@ function renderYokoReport(year, entries) {
         <span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
       </div>
     </div>`;
+}
+
+// ============================
+//   CSV IMPORT
+// ============================
+function importCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result.replace(/^\uFEFF/, '');
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      if (lines.length < 2) { showImportResult('error', 'データが見つかりませんでした。'); return; }
+
+      const header = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+      const required = ['日付','摘要','勘定科目','収入','支出','決済方法'];
+      const missing = required.filter(r => !header.includes(r));
+      if (missing.length > 0) {
+        showImportResult('error', 'CSVの形式が正しくありません。\n不足列：' + missing.join('、'));
+        return;
+      }
+
+      const idx = {
+        date:      header.indexOf('日付'),
+        desc:      header.indexOf('摘要'),
+        subject:   header.indexOf('勘定科目'),
+        voucherNo: header.indexOf('伝票番号'),
+        income:    header.indexOf('収入'),
+        expense:   header.indexOf('支出'),
+        payment:   header.indexOf('決済方法'),
+      };
+
+      const existing = getEntries();
+      const existingKeys = new Set(existing.map(e => e.date+'_'+e.desc+'_'+e.amount+'_'+e.type));
+
+      let added = 0, skipped = 0, errors = 0;
+      const newEntries = [];
+
+      lines.slice(1).forEach(function(line) {
+        if (!line.trim()) return;
+        // CSV列パース（ダブルクォート対応）
+        const cols = [];
+        let cur = '', inQ = false;
+        for (let c of line) {
+          if (c === '"') { inQ = !inQ; }
+          else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+          else { cur += c; }
+        }
+        cols.push(cur);
+
+        const get = function(i) { return (cols[i] || '').replace(/"/g, '').trim(); };
+
+        const date       = get(idx.date);
+        const desc       = get(idx.desc);
+        const subject    = get(idx.subject);
+        const voucherNo  = get(idx.voucherNo);
+        const incomeStr  = get(idx.income);
+        const expenseStr = get(idx.expense);
+        const paymentStr = get(idx.payment);
+
+        if (!date || !/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(date)) { errors++; return; }
+        const normalizedDate = date.replace(/\//g, '-');
+
+        const incomeAmt  = parseInt((incomeStr  || '').replace(/,/g,'')) || 0;
+        const expenseAmt = parseInt((expenseStr || '').replace(/,/g,'')) || 0;
+        if (incomeAmt === 0 && expenseAmt === 0) { errors++; return; }
+
+        const type    = incomeAmt > 0 ? 'income' : 'expense';
+        const amount  = incomeAmt > 0 ? incomeAmt : expenseAmt;
+        const payment = paymentStr === '銀行口座' ? 'bank' : 'cash';
+
+        const key = normalizedDate + '_' + desc + '_' + amount + '_' + type;
+        if (existingKeys.has(key)) { skipped++; return; }
+
+        existingKeys.add(key);
+        newEntries.push({
+          id: Date.now() + Math.random(),
+          date: normalizedDate,
+          desc: desc,
+          subject: subject || 'その他',
+          voucherNo: voucherNo,
+          type: type,
+          amount: amount,
+          payment: payment
+        });
+        added++;
+      });
+
+      if (newEntries.length > 0) {
+        const all = getEntries();
+        all.push(...newEntries);
+        saveEntries(all);
+        renderLedger();
+      }
+
+      if (added > 0) {
+        const msg = '✅ インポート完了！\n新規追加：' + added + '件' +
+          (skipped > 0 ? '　重複スキップ：' + skipped + '件' : '') +
+          (errors  > 0 ? '　読込エラー：'  + errors  + '件' : '');
+        showImportResult('success', msg);
+        showToast('✅ ' + added + '件をインポートしました');
+      } else if (skipped > 0) {
+        showImportResult('warn', '⚠️ すべて重複データのためスキップしました（' + skipped + '件）');
+      } else {
+        showImportResult('error', '❌ インポートできるデータがありませんでした。' +
+          (errors > 0 ? '（エラー：' + errors + '件）' : ''));
+      }
+
+    } catch(err) {
+      showImportResult('error', 'CSVの読み込みに失敗しました。ファイルを確認してください。');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function showImportResult(type, msg) {
+  const el = document.getElementById('importResult');
+  if (!el) return;
+  const colors  = { success: '#1e7b4e', warn: '#8a6020', error: '#c0392b' };
+  const bgs     = { success: '#e8f5ef', warn: '#fdf8e8', error: '#fdf0ee' };
+  const borders = { success: '#1e7b4e', warn: '#c8a84b', error: '#c0392b' };
+  el.innerHTML  = '<div style="padding:10px 14px;border-radius:8px;border:1.5px solid ' +
+    borders[type] + ';background:' + bgs[type] + ';color:' + colors[type] +
+    ';white-space:pre-line;line-height:1.7;">' + msg + '</div>';
 }
 
 // ============================
