@@ -531,6 +531,17 @@
             <option value="">年度を選択</option>
           </select>
         </div>
+        <!-- 表示切替タブ -->
+        <div style="display:flex;gap:0;margin-bottom:16px;border-radius:10px;overflow:hidden;border:2px solid var(--border);">
+          <button id="reportTabOwn" onclick="switchReportTab('own')"
+            style="flex:1;padding:11px;background:var(--navy);color:white;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">
+            📋 自団体決算書
+          </button>
+          <button id="reportTabYoko" onclick="switchReportTab('yoko')"
+            style="flex:1;padding:11px;background:var(--bg2);color:var(--text2);border:none;border-left:2px solid var(--border);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">
+            🏙️ 横浜市報告書形式
+          </button>
+        </div>
         <div class="export-bar no-print">
           <button class="btn-export print" onclick="window.print()">🖨️ 印刷・PDF保存</button>
         </div>
@@ -566,7 +577,13 @@
         </div>
       </div>
 
-      <!-- データ管理 -->
+      <!-- 横浜市科目マッピング -->
+      <div class="card">
+        <div class="card-title">🏙️ 横浜市報告書 科目マッピング</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">自団体の各科目が横浜市の報告書のどの科目に該当するかを設定してください。設定後は決算報告書タブで「横浜市報告書形式」で表示できます。</p>
+        <div id="mappingList"></div>
+        <p style="font-size:12px;color:var(--text2);margin-top:8px;">※「対応なし」を選ぶとその科目は横浜市報告書に含まれません。</p>
+      </div>
       <div class="card">
         <div class="card-title">🗂️ データ管理</div>
 
@@ -1168,8 +1185,15 @@ function renderReport() {
   const year = document.getElementById('reportYear')?.value;
   if (!year) return;
   const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
-  const orgName = allData[currentOrg]?.orgName || '';
 
+  // 横浜市形式
+  if (currentReportTab === 'yoko') {
+    renderYokoReport(year, entries);
+    return;
+  }
+
+  // 自団体形式（従来）
+  const orgName = allData[currentOrg]?.orgName || '';
   const subjects = {};
   entries.forEach(e => {
     if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
@@ -1189,7 +1213,6 @@ function renderReport() {
       <h2>${year}年度　決算報告書</h2>
       <p>会計年度：${year}年4月1日 〜 ${+year+1}年3月31日</p>
     </div>
-
     <div class="report-section">
       <h3>【収入の部】</h3>
       <div class="ledger-table"><table class="report-table">
@@ -1200,7 +1223,6 @@ function renderReport() {
         </tbody>
       </table></div>
     </div>
-
     <div class="report-section">
       <h3>【支出の部】</h3>
       <div class="ledger-table"><table class="report-table">
@@ -1211,6 +1233,258 @@ function renderReport() {
         </tbody>
       </table></div>
     </div>
+    <div class="ledger-table"><table class="report-table">
+      <tr class="total">
+        <td><strong>【収支差額】（収入合計 − 支出合計）</strong></td>
+        <td class="text-right"><strong>${balance<0?'△':''}¥${Math.abs(balance).toLocaleString()}</strong></td>
+      </tr>
+    </table></div>
+    <div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">
+      以上のとおり${year}年度の会計を報告いたします。<br><br>
+      <div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px">
+        <span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
+        <span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
+      </div>
+    </div>`;
+}
+
+// ============================
+//   横浜市 科目定義
+// ============================
+const YOKO_SUBJECTS = {
+  income: [
+    '会費',
+    '地域活動推進費',
+    '地域防犯灯維持管理費',
+    '事業収入',
+    '寄付金・祝金等',
+    '会館使用料',
+    '団体交付金',
+    '利息等',
+    '前年度からの繰入金',
+    'その他収入',
+  ],
+  expense: [
+    // 事務費
+    '【事務費】会議費',
+    '【事務費】事務費',
+    '【事務費】人件費',
+    '【事務費】会館(会場)借上料',
+    '【事務費】会館光熱水費',
+    '【事務費】会館修繕費',
+    '【事務費】その他',
+    // 事業費
+    '【事業費】環境事業費',
+    '【事業費】安全・安心環境づくり事業費',
+    '【事業費】社会教育事業費',
+    '【事業費】レクリエーション費',
+    '【事業費】福利厚生事業費',
+    '【事業費】文化事業費',
+    '【事業費】その他',
+    // 補助事業費
+    '【補助】地域防犯灯維持管理費',
+    '【補助】町の防災組織活動費',
+    '【補助】自治会町内会館脱炭素化推進事業補助金',
+    '【補助】地域の防犯力向上緊急補助金',
+    // その他
+    '【その他】会館建設・修繕積立金',
+    '【その他】交際費',
+    '【その他】慶弔費',
+    '【その他】慶弔会費',
+    '【その他】寄付金・募金',
+    '【その他】予備費',
+    '【その他】その他',
+  ]
+};
+
+// マッピング保存・取得
+function getMapping() {
+  const key = 'yokoMapping_' + currentOrg;
+  const raw = localStorage.getItem(key);
+  return raw ? JSON.parse(raw) : {};
+}
+function saveMapping(map) {
+  localStorage.setItem('yokoMapping_' + currentOrg, JSON.stringify(map));
+}
+
+// マッピング設定画面の描画
+function renderMappingSettings() {
+  const subs = getSubjects();
+  const mapping = getMapping();
+  const allMySubs = [
+    ...subs.income.map(s => ({ name: s, type: 'income' })),
+    ...subs.expense.map(s => ({ name: s, type: 'expense' }))
+  ];
+  const mappedCount = allMySubs.filter(s => mapping[s.name]).length;
+  const total = allMySubs.length;
+
+  let html = `
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="background:#e8f5ef;border:1px solid var(--green);border-radius:10px;padding:10px 16px;font-size:13px;">
+        ✅ 設定済み：<strong style="color:var(--green);font-size:16px;">${mappedCount}</strong> 科目
+      </div>
+      <div style="background:${total-mappedCount>0?'#fdf0ee':'var(--bg2)'};border:1px solid ${total-mappedCount>0?'var(--red)':'var(--border)'};border-radius:10px;padding:10px 16px;font-size:13px;">
+        ${total-mappedCount>0?'⚠️':'✅'} 未設定：<strong style="color:${total-mappedCount>0?'var(--red)':'var(--text2)'};font-size:16px;">${total-mappedCount}</strong> 科目
+      </div>
+    </div>`;
+
+  html += `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="background:var(--navy);color:white;">
+      <th style="padding:9px 10px;text-align:left;">自団体の科目</th>
+      <th style="padding:9px 10px;text-align:center;">種別</th>
+      <th style="padding:9px 10px;text-align:left;">→ 横浜市の科目</th>
+    </tr></thead><tbody>`;
+
+  allMySubs.forEach((s, i) => {
+    const yokoList = s.type === 'income' ? YOKO_SUBJECTS.income : YOKO_SUBJECTS.expense;
+    const cur = mapping[s.name] || '';
+    const matched = cur ? `style="border-color:var(--green);background:#f0faf4;"` : '';
+    html += `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 10px;font-weight:500;">${s.name}</td>
+      <td style="padding:8px 10px;text-align:center;">
+        <span class="badge ${s.type==='income'?'badge-bank':'badge-cash'}">${s.type==='income'?'収入':'支出'}</span>
+      </td>
+      <td style="padding:6px 8px;">
+        <select data-subject="${s.name}" onchange="updateMapping(this)"
+          style="width:100%;padding:7px 10px;border:2px solid ${cur?'var(--green)':'var(--border)'};border-radius:8px;
+          font-family:inherit;font-size:13px;background:${cur?'#f0faf4':'var(--bg)'};-webkit-appearance:none;">
+          <option value="">-- 対応なし --</option>
+          ${yokoList.map(y => `<option value="${y}" ${cur===y?'selected':''}>${y}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('mappingList').innerHTML = html;
+}
+
+function updateMapping(sel) {
+  const subject = sel.getAttribute('data-subject');
+  const mapping = getMapping();
+  if (sel.value) mapping[subject] = sel.value;
+  else delete mapping[subject];
+  saveMapping(mapping);
+  showToast('✅ マッピングを保存しました');
+}
+
+// ============================
+//   報告書タブ切替
+// ============================
+let currentReportTab = 'own';
+function switchReportTab(tab) {
+  currentReportTab = tab;
+  const isOwn = tab === 'own';
+  document.getElementById('reportTabOwn').style.background = isOwn ? 'var(--navy)' : 'var(--bg2)';
+  document.getElementById('reportTabOwn').style.color = isOwn ? 'white' : 'var(--text2)';
+  document.getElementById('reportTabYoko').style.background = isOwn ? 'var(--bg2)' : '#1a3a5c';
+  document.getElementById('reportTabYoko').style.color = isOwn ? 'var(--text2)' : 'white';
+  renderReport();
+}
+
+// ============================
+//   横浜市報告書レンダリング
+// ============================
+function renderYokoReport(year, entries) {
+  const orgName = allData[currentOrg]?.orgName || '';
+  const mapping = getMapping();
+
+  // マッピングに従い横浜市科目ごとに集計
+  const yokoTotals = {};
+  entries.forEach(e => {
+    const yokoSubject = mapping[e.subject];
+    if (!yokoSubject) return;
+    if (!yokoTotals[yokoSubject]) yokoTotals[yokoSubject] = 0;
+    yokoTotals[yokoSubject] += e.type === 'income' ? e.amount : -e.amount;
+  });
+
+  // 未マッピング科目を収集（その年度に実際に入力があるもののみ）
+  const usedSubjects = [...new Set(entries.map(e => e.subject))];
+  const unmapped = usedSubjects.filter(s => !mapping[s]);
+
+  const incomeList = YOKO_SUBJECTS.income;
+  const expenseList = YOKO_SUBJECTS.expense;
+
+  const totalInc = incomeList.reduce((s, k) => s + Math.max(0, yokoTotals[k] || 0), 0);
+  const totalExp = expenseList.reduce((s, k) => s + Math.abs(Math.min(0, yokoTotals[k] || 0)) + (yokoTotals[k] < 0 ? Math.abs(yokoTotals[k]) : 0), 0);
+
+  // 支出は負の値として格納されているので絶対値で表示
+  const expTotals = {};
+  expenseList.forEach(k => {
+    expTotals[k] = Math.abs(yokoTotals[k] || 0);
+  });
+  const totalExpCalc = expenseList.reduce((s, k) => s + expTotals[k], 0);
+  const balance = totalInc - totalExpCalc;
+
+  // セクション分け
+  const jimuhi = expenseList.filter(k => k.startsWith('【事務費】'));
+  const jigyohi = expenseList.filter(k => k.startsWith('【事業費】'));
+  const hojohi = expenseList.filter(k => k.startsWith('【補助】'));
+  const sonota = expenseList.filter(k => k.startsWith('【その他】'));
+
+  const jimuTotal = jimuhi.reduce((s, k) => s + expTotals[k], 0);
+  const jigyoTotal = jigyohi.reduce((s, k) => s + expTotals[k], 0);
+  const hojoTotal = hojohi.reduce((s, k) => s + expTotals[k], 0);
+  const sonotaTotal = sonota.reduce((s, k) => s + expTotals[k], 0);
+
+  const fmtRow = (label, val, indent) =>
+    `<tr><td style="padding:7px 12px;${indent?'padding-left:24px;':''}">${label}</td>
+     <td style="padding:7px 12px;text-align:right;color:${val>0?'var(--navy)':'var(--text2)'};">
+       ${val > 0 ? '¥' + val.toLocaleString() : '-'}</td></tr>`;
+
+  const subHeader = (label, total, color) =>
+    `<tr style="background:#e8eef5;">
+      <td style="padding:8px 12px;font-weight:700;color:${color||'var(--navy)'};">　${label}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:700;">¥${total.toLocaleString()}</td>
+    </tr>`;
+
+  let unmappedHtml = '';
+  if (unmapped.length > 0) {
+    unmappedHtml = `<div style="background:#fff8e8;border:2px solid var(--gold);border-radius:10px;padding:14px 16px;margin-top:16px;">
+      <div style="font-weight:700;color:#8a6020;margin-bottom:8px;">⚠️ 横浜市科目に未対応の科目があります</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px;">以下の科目は報告書に含まれていません。設定画面でマッピングを設定してください。</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${unmapped.map(s => `<span style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:13px;">${s}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('reportContent').innerHTML = `
+    <div class="report-header">
+      <h2>${orgName}</h2>
+      <h2>${year}年度　決算報告書（横浜市形式）</h2>
+      <p>会計年度：${year}年4月1日 〜 ${+year+1}年3月31日</p>
+    </div>
+
+    <div class="report-section">
+      <h3>【収入の部】</h3>
+      <div class="ledger-table"><table class="report-table" style="width:100%">
+        <thead><tr><th>科目</th><th class="text-right">決算額</th></tr></thead>
+        <tbody>
+          ${incomeList.map(k => fmtRow(k, Math.max(0, yokoTotals[k]||0), true)).join('')}
+          <tr class="subtotal"><td><strong>収入合計</strong></td>
+            <td class="text-right amount-income"><strong>¥${totalInc.toLocaleString()}</strong></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="report-section">
+      <h3>【支出の部】</h3>
+      <div class="ledger-table"><table class="report-table" style="width:100%">
+        <thead><tr><th>科目</th><th class="text-right">決算額</th></tr></thead>
+        <tbody>
+          ${subHeader('事務費', jimuTotal)}
+          ${jimuhi.map(k => fmtRow(k.replace('【事務費】',''), expTotals[k], true)).join('')}
+          ${subHeader('事業費', jigyoTotal)}
+          ${jigyohi.map(k => fmtRow(k.replace('【事業費】',''), expTotals[k], true)).join('')}
+          ${subHeader('補助事業費', hojoTotal)}
+          ${hojohi.map(k => fmtRow(k.replace('【補助】',''), expTotals[k], true)).join('')}
+          ${subHeader('その他', sonotaTotal)}
+          ${sonota.map(k => fmtRow(k.replace('【その他】',''), expTotals[k], true)).join('')}
+          <tr class="subtotal"><td><strong>支出合計</strong></td>
+            <td class="text-right amount-expense"><strong>¥${totalExpCalc.toLocaleString()}</strong></td></tr>
+        </tbody>
+      </table></div>
+    </div>
 
     <div class="ledger-table"><table class="report-table">
       <tr class="total">
@@ -1218,6 +1492,8 @@ function renderReport() {
         <td class="text-right"><strong>${balance<0?'△':''}¥${Math.abs(balance).toLocaleString()}</strong></td>
       </tr>
     </table></div>
+
+    ${unmappedHtml}
 
     <div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">
       以上のとおり${year}年度の会計を報告いたします。<br><br>
@@ -1316,7 +1592,7 @@ function _doShowSection(name) {
   if (name === 'monthly') renderMonthly();
   if (name === 'subject') renderSubject();
   if (name === 'report') renderReport();
-  if (name === 'settings') renderSubjectSettings();
+  if (name === 'settings') { renderSubjectSettings(); renderMappingSettings(); }
   // lock settings again when leaving
   if (name !== 'settings') settingsUnlocked = false;
 }
