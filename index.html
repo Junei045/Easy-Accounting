@@ -390,10 +390,6 @@
             <optgroup label="収入科目">
               <option value="会費">会費</option>
               <option value="補助金・助成金">補助金・助成金</option>
-              <option value="地域活動推進費補助金">地域活動推進費補助金</option>
-              <option value="地域防犯灯維持管理費補助金">地域防犯灯維持管理費補助金</option>
-              <option value="防犯灯維持管理費">防犯灯維持管理費</option>
-              <option value="防災組織活動費">防災組織活動費</option>
               <option value="寄付金">寄付金</option>
               <option value="事業収入">事業収入</option>
               <option value="雑収入">雑収入</option>
@@ -413,10 +409,6 @@
               <option value="保険料">保険料</option>
               <option value="光熱費">光熱費</option>
               <option value="雑費">雑費</option>
-              <option value="地域活動推進費補助金">地域活動推進費補助金</option>
-              <option value="地域防犯灯維持管理費補助金">地域防犯灯維持管理費補助金</option>
-              <option value="防犯灯維持管理費">防犯灯維持管理費</option>
-              <option value="防災組織活動費">防災組織活動費</option>
             </optgroup>
           </select>
         </div>
@@ -680,9 +672,10 @@
 //   SUBJECTS
 // ============================
 const DEFAULT_SUBJECTS = {
-  income: ['前年度からの繰入金','会費','自治会町内会館脱炭素化推進事業補助金','地域活動推進費','地域防犯灯維持管理費','町の防災組織活動費','広報配布謝金','事業収入','寄付金・祝金','会館使用料','団体交付金','受取利息','雑収入'],
-  expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','光熱費','雑費','地域活動推進費補助金','地域防犯灯維持管理費補助金','防犯灯維持管理費','防災組織活動費']
+  income: ['会費','補助金・助成金','寄付金','事業収入','雑収入','繰越金'],
+  expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','光熱費','雑費']
 };
+
 function getSubjects() {
   const key = 'subjects_' + currentOrg;
   const raw = localStorage.getItem(key);
@@ -1281,16 +1274,13 @@ const YOKO_SUBJECTS = {
     '会費',
     '地域活動推進費',
     '地域防犯灯維持管理費',
-    '町の防災組織活動費',
-    '自治会町内会館脱炭素化推進事業補助金',
-    'その他補助金',
-    '広報配布謝金',
     '事業収入',
     '寄付金・祝金等',
     '会館使用料',
-    '団体交付金・謝金',
-    '利息・その他雑収入',
-    '前年度からの繰入金',  
+    '団体交付金',
+    '利息等',
+    '前年度からの繰入金',
+    'その他収入',
   ],
   expense: [
     // 事務費
@@ -1312,12 +1302,13 @@ const YOKO_SUBJECTS = {
     // 補助事業費
     '【補助】地域防犯灯維持管理費',
     '【補助】町の防災組織活動費',
-    '【補助】自治会町内会館脱炭素化推進事業補助金',    ,
+    '【補助】自治会町内会館脱炭素化推進事業補助金',
+    '【補助】地域の防犯力向上緊急補助金',
     // その他
     '【その他】会館建設・修繕積立金',
     '【その他】交際費',
     '【その他】慶弔費',
-    '【その他】懇親会費',
+    '【その他】慶弔会費',
     '【その他】寄付金・募金',
     '【その他】予備費',
     '【その他】その他',
@@ -1618,11 +1609,11 @@ function importCSV(input) {
         added++;
       });
 
+      // 修正後
       if (newEntries.length > 0) {
-        const all = getEntries();
-        all.push(...newEntries);
-        saveEntries(all);
-        renderLedger();
+         allData[currentOrg].entries = [...getEntries(), ...newEntries];
+         saveAll();  // ← saveAll()に変更
+         renderLedger();
       }
 
       if (added > 0) {
