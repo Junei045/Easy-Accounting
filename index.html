@@ -436,8 +436,6 @@
 
     <!-- ===== LEDGER ===== -->
     <div class="section" id="section-ledger">
-
-      <!-- 残高サマリー -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
         <div style="background:linear-gradient(135deg,#1a3a5c,#2a5080);border-radius:var(--radius);padding:14px 16px;color:white;">
           <div style="font-size:11px;opacity:0.8;margin-bottom:4px;">🏦 銀行口座 残高</div>
@@ -448,8 +446,6 @@
           <div id="balanceCashDisp" style="font-size:22px;font-weight:700;">¥0</div>
         </div>
       </div>
-
-      <!-- タブ切り替え -->
       <div style="display:flex;gap:0;margin-bottom:0;border-radius:var(--radius) var(--radius) 0 0;overflow:hidden;border:2px solid var(--border);border-bottom:none;">
         <button id="tabBank" onclick="switchLedgerTab('bank')"
           style="flex:1;padding:13px;background:var(--navy);color:white;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
@@ -460,13 +456,10 @@
           💴 現金出納帳
         </button>
       </div>
-
       <div class="card" style="border-radius:0 0 var(--radius) var(--radius);margin-bottom:16px;border-top:none;">
         <div id="ledgerTabLabel" class="card-title">🏦 銀行口座出納帳</div>
         <div class="filter-bar">
-          <select id="filterYear" onchange="renderLedger()">
-            <option value="">年度を選択</option>
-          </select>
+          <select id="filterYear" onchange="renderLedger()"><option value="">年度を選択</option></select>
           <select id="filterMonth" onchange="renderLedger()">
             <option value="">全月</option>
             <option value="4">4月</option><option value="5">5月</option>
@@ -497,9 +490,7 @@
       <div class="card">
         <div class="card-title">📊 月別集計</div>
         <div class="filter-bar">
-          <select id="monthlyYear" onchange="renderMonthly()">
-            <option value="">年度を選択</option>
-          </select>
+          <select id="monthlyYear" onchange="renderMonthly()"><option value="">年度を選択</option></select>
         </div>
         <div class="export-bar no-print">
           <button class="btn-export print" onclick="window.print()">🖨️ 印刷</button>
@@ -513,9 +504,7 @@
       <div class="card">
         <div class="card-title">📋 科目別集計</div>
         <div class="filter-bar">
-          <select id="subjectYear" onchange="renderSubject()">
-            <option value="">年度を選択</option>
-          </select>
+          <select id="subjectYear" onchange="renderSubject()"><option value="">年度を選択</option></select>
         </div>
         <div class="export-bar no-print">
           <button class="btn-export print" onclick="window.print()">🖨️ 印刷</button>
@@ -529,11 +518,8 @@
       <div class="card">
         <div class="card-title">📑 決算報告書</div>
         <div class="filter-bar">
-          <select id="reportYear" onchange="renderReport()">
-            <option value="">年度を選択</option>
-          </select>
+          <select id="reportYear" onchange="renderReport()"><option value="">年度を選択</option></select>
         </div>
-        <!-- 表示切替タブ -->
         <div style="display:flex;gap:0;margin-bottom:16px;border-radius:10px;overflow:hidden;border:2px solid var(--border);">
           <button id="reportTabOwn" onclick="switchReportTab('own')"
             style="flex:1;padding:11px;background:var(--navy);color:white;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">
@@ -553,12 +539,9 @@
 
     <!-- ===== SETTINGS ===== -->
     <div class="section" id="section-settings">
-
-      <!-- 勘定科目管理 -->
       <div class="card">
         <div class="card-title">📋 勘定科目の管理</div>
         <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">自団体に合わせて科目を追加・削除できます。</p>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div>
             <div style="font-weight:700;color:var(--green);margin-bottom:10px;font-size:14px;">▲ 収入科目</div>
@@ -578,18 +561,14 @@
           </div>
         </div>
       </div>
-
-      <!-- 横浜市科目マッピング -->
       <div class="card">
         <div class="card-title">🏙️ 横浜市報告書 科目マッピング</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">自団体の各科目が横浜市の報告書のどの科目に該当するかを設定してください。設定後は決算報告書タブで「横浜市報告書形式」で表示できます。</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">自団体の各科目が横浜市の報告書のどの科目に該当するかを設定してください。</p>
         <div id="mappingList"></div>
         <p style="font-size:12px;color:var(--text2);margin-top:8px;">※「対応なし」を選ぶとその科目は横浜市報告書に含まれません。</p>
       </div>
       <div class="card">
         <div class="card-title">🗂️ データ管理</div>
-
-        <!-- CSVインポート -->
         <div style="margin-bottom:20px;">
           <div style="font-weight:600;margin-bottom:8px;font-size:14px;">📤 CSVインポート（担当者引き継ぎ・端末移行）</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
@@ -605,23 +584,19 @@
           </div>
           <div id="importResult" style="margin-top:10px;font-size:13px;"></div>
         </div>
-
         <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
-          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
-            入力したデータをまとめて削除できます。<strong style="color:var(--red)">削除後は元に戻せません。</strong>
-          </p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button onclick="clearCurrentYear()" style="padding:12px 16px;background:var(--bg);border:2px solid var(--gold);color:#8a6020;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
-              📅 今年度のデータを消去
-            </button>
-            <button onclick="clearAllEntries()" style="padding:12px 16px;background:var(--bg);border:2px solid var(--red);color:var(--red);border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
-              🗑️ 全データを消去（テスト後リセット）
-            </button>
-          </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+          入力したデータをまとめて削除できます。<strong style="color:var(--red)">削除後は元に戻せません。</strong>
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="clearCurrentYear()" style="padding:12px 16px;background:var(--bg);border:2px solid var(--gold);color:#8a6020;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+            📅 今年度のデータを消去
+          </button>
+          <button onclick="clearAllEntries()" style="padding:12px 16px;background:var(--bg);border:2px solid var(--red);color:var(--red);border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+            🗑️ 全データを消去（テスト後リセット）
+          </button>
         </div>
-
         <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
-
         <div>
           <div style="font-weight:600;margin-bottom:8px;font-size:14px;">パスワード変更</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -631,7 +606,6 @@
           </div>
         </div>
       </div>
-
     </div>
 
   </main>
@@ -668,27 +642,68 @@
 </div>
 
 <script>
+// ============================================================
+// 🔐 セキュリティユーティリティ（Easy-Accounting用）
+// Firebase非使用のためコンソールログのみ記録
+// ============================================================
+
+// 入力値の異常チェック（XSS・長すぎる文字列）
+function validateInput(value, fieldName, maxLength) {
+  maxLength = maxLength || 500;
+  if (!value || String(value).trim() === '') {
+    return { ok: false, reason: fieldName + 'が空です' };
+  }
+  if (String(value).length > maxLength) {
+    console.warn('[Security] 異常に長い入力値:', fieldName, String(value).length + '文字');
+    return { ok: false, reason: fieldName + 'が長すぎます（最大' + maxLength + '文字）' };
+  }
+  var xssPattern = /<script|javascript:|on\w+\s*=/i;
+  if (xssPattern.test(String(value))) {
+    console.warn('[Security] XSS疑いの入力値:', fieldName, String(value).substring(0, 80));
+    return { ok: false, reason: fieldName + 'に使用できない文字が含まれています' };
+  }
+  return { ok: true };
+}
+
+// 短時間大量送信チェック（ボット対策）
+var _submitCounts = {};
+function checkSubmitRate(formId, threshold, windowMs) {
+  threshold = threshold || 5;
+  windowMs  = windowMs  || 60000;
+  var now = Date.now();
+  if (!_submitCounts[formId]) _submitCounts[formId] = [];
+  _submitCounts[formId] = _submitCounts[formId].filter(function(t){ return now - t < windowMs; });
+  _submitCounts[formId].push(now);
+  if (_submitCounts[formId].length > threshold) {
+    console.warn('[Security] 短時間大量送信の疑い:', formId,
+      (windowMs/1000) + '秒以内に' + _submitCounts[formId].length + '回送信');
+    return false;
+  }
+  return true;
+}
+// ============================================================
+
 // ============================
 //   SUBJECTS
 // ============================
-const DEFAULT_SUBJECTS = {
+var DEFAULT_SUBJECTS = {
   income: ['会費','補助金・助成金','寄付金','事業収入','雑収入','繰越金'],
   expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','光熱費','雑費']
 };
 
 function getSubjects() {
-  const key = 'subjects_' + currentOrg;
-  const raw = localStorage.getItem(key);
+  var key = 'subjects_' + currentOrg;
+  var raw = localStorage.getItem(key);
   return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
 }
 function saveSubjects(subs) {
   localStorage.setItem('subjects_' + currentOrg, JSON.stringify(subs));
 }
 function addSubject(type) {
-  const inp = document.getElementById(type === 'income' ? 'newIncomeSubject' : 'newExpenseSubject');
-  const name = inp.value.trim();
+  var inp = document.getElementById(type === 'income' ? 'newIncomeSubject' : 'newExpenseSubject');
+  var name = inp.value.trim();
   if (!name) { showToast('科目名を入力してください'); return; }
-  const subs = getSubjects();
+  var subs = getSubjects();
   if (subs[type].includes(name)) { showToast('すでに登録されています'); return; }
   subs[type].push(name);
   saveSubjects(subs);
@@ -697,39 +712,29 @@ function addSubject(type) {
   rebuildSubjectSelect();
   showToast('✅ 科目を追加しました');
 }
-function removeSubject(type, name) {
-  if (!confirm(`「${name}」を削除しますか？\n（入力済みデータには影響しません）`)) return;
-  const subs = getSubjects();
-  subs[type] = subs[type].filter(s => s !== name);
-  saveSubjects(subs);
-  renderSubjectSettings();
-  rebuildSubjectSelect();
-  showToast('削除しました');
-}
 function renderSubjectSettings() {
-  const subs = getSubjects();
-  ['income','expense'].forEach(type => {
-    const div = document.getElementById(type + 'SubjectList');
+  var subs = getSubjects();
+  ['income','expense'].forEach(function(type) {
+    var div = document.getElementById(type + 'SubjectList');
     if (!div) return;
-    div.innerHTML = subs[type].map((s, i) => `
-      <div style="display:flex;align-items:center;justify-content:space-between;
-        padding:7px 10px;border:1px solid var(--border);border-radius:8px;
-        margin-bottom:6px;background:var(--bg);font-size:14px;">
-        <span>${s}</span>
-        <button data-type="${type}" data-idx="${i}"
-          class="sub-del-btn"
-          style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 8px;line-height:1;">✕</button>
-      </div>`).join('');
+    div.innerHTML = subs[type].map(function(s, i) { return (
+      '<div style="display:flex;align-items:center;justify-content:space-between;' +
+      'padding:7px 10px;border:1px solid var(--border);border-radius:8px;' +
+      'margin-bottom:6px;background:var(--bg);font-size:14px;">' +
+      '<span>' + s + '</span>' +
+      '<button data-type="' + type + '" data-idx="' + i + '" class="sub-del-btn"' +
+      ' style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 8px;line-height:1;">✕</button>' +
+      '</div>');
+    }).join('');
   });
-  // attach events after rendering
-  document.querySelectorAll('.sub-del-btn').forEach(btn => {
+  document.querySelectorAll('.sub-del-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      const type = this.getAttribute('data-type');
-      const idx = parseInt(this.getAttribute('data-idx'));
-      const subs = getSubjects();
-      const name = subs[type][idx];
-      showConfirmModal(`「${name}」を削除しますか？\n（入力済みデータには影響しません）`, () => {
-        const s2 = getSubjects();
+      var type = this.getAttribute('data-type');
+      var idx  = parseInt(this.getAttribute('data-idx'));
+      var subs = getSubjects();
+      var name = subs[type][idx];
+      showConfirmModal('「' + name + '」を削除しますか？\n（入力済みデータには影響しません）', function() {
+        var s2 = getSubjects();
         s2[type].splice(idx, 1);
         saveSubjects(s2);
         renderSubjectSettings();
@@ -740,12 +745,12 @@ function renderSubjectSettings() {
   });
 }
 function rebuildSubjectSelect() {
-  const subs = getSubjects();
-  const sel = document.getElementById('entrySubject');
-  const cur = sel.value;
+  var subs = getSubjects();
+  var sel = document.getElementById('entrySubject');
+  var cur = sel.value;
   sel.innerHTML = '<option value="">-- 選択してください --</option>' +
-    `<optgroup label="収入科目">${subs.income.map(s=>`<option value="${s}">${s}</option>`).join('')}</optgroup>` +
-    `<optgroup label="支出科目">${subs.expense.map(s=>`<option value="${s}">${s}</option>`).join('')}</optgroup>`;
+    '<optgroup label="収入科目">' + subs.income.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('') + '</optgroup>' +
+    '<optgroup label="支出科目">' + subs.expense.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('') + '</optgroup>';
   if (cur) sel.value = cur;
 }
 
@@ -753,40 +758,38 @@ function rebuildSubjectSelect() {
 //   DATA CLEAR
 // ============================
 function clearAllEntries() {
-  const count = getEntries().length;
+  var count = getEntries().length;
   showConfirmModal(
-    `全データ（${count}件）を削除します。\nこの操作は取り消せません。\n\nよろしいですか？`,
-    () => {
+    '全データ（' + count + '件）を削除します。\nこの操作は取り消せません。\n\nよろしいですか？',
+    function() {
       allData[currentOrg].entries = [];
       saveAll();
       populateYearSelects();
       renderSubjectSettings();
       showToast('🗑️ 全データを消去しました');
-    },
-    '全削除する'
+    }, '全削除する'
   );
 }
 function clearCurrentYear() {
-  const year = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
-  const count = getEntries().filter(e => getFiscalYear(e.date) == year).length;
+  var year = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  var count = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; }).length;
   showConfirmModal(
-    `${year}年度のデータ（${count}件）を削除します。\nよろしいですか？`,
-    () => {
-      allData[currentOrg].entries = getEntries().filter(e => getFiscalYear(e.date) != year);
+    year + '年度のデータ（' + count + '件）を削除します。\nよろしいですか？',
+    function() {
+      allData[currentOrg].entries = getEntries().filter(function(e){ return getFiscalYear(e.date) != year; });
       saveAll();
       populateYearSelects();
-      showToast(`🗑️ ${year}年度のデータを消去しました`);
-    },
-    '削除する'
+      showToast('🗑️ ' + year + '年度のデータを消去しました');
+    }, '削除する'
   );
 }
 
 // ============================
-//   CHANGE PASSWORD (form)
+//   CHANGE PASSWORD
 // ============================
 function changePwForm() {
-  const p1 = document.getElementById('newPw1').value;
-  const p2 = document.getElementById('newPw2').value;
+  var p1 = document.getElementById('newPw1').value;
+  var p2 = document.getElementById('newPw2').value;
   if (!p1) { showToast('新パスワードを入力してください'); return; }
   if (p1 !== p2) { showToast('パスワードが一致しません'); return; }
   allData[currentOrg].password = p1;
@@ -796,43 +799,38 @@ function changePwForm() {
   showToast('✅ パスワードを変更しました');
 }
 
-let currentOrg = null;
-let allData = {}; // { orgId: { password, orgName, entries:[] } }
+var currentOrg = null;
+var allData = {};
 
 function loadAll() {
-  const raw = localStorage.getItem('accounting_v2');
+  var raw = localStorage.getItem('accounting_v2');
   if (raw) allData = JSON.parse(raw);
 }
 function saveAll() {
   localStorage.setItem('accounting_v2', JSON.stringify(allData));
 }
 function getEntries() {
-  return allData[currentOrg]?.entries || [];
+  return allData[currentOrg] && allData[currentOrg].entries ? allData[currentOrg].entries : [];
 }
 function addEntry(entry) {
   allData[currentOrg].entries.push(entry);
   saveAll();
 }
-function deleteEntry(id) {
-  allData[currentOrg].entries = allData[currentOrg].entries.filter(e => e.id !== id);
-  saveAll();
-}
 
-// 会計年度判定（4月〜翌3月）
 function getFiscalYear(dateStr) {
-  const d = new Date(dateStr);
-  const m = d.getMonth() + 1;
-  const y = d.getFullYear();
+  var d = new Date(dateStr);
+  var m = d.getMonth() + 1;
+  var y = d.getFullYear();
   return m >= 4 ? y : y - 1;
 }
 function getFiscalYears() {
-  const entries = getEntries();
-  const years = new Set(entries.map(e => getFiscalYear(e.date)));
-  const thisYear = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  var entries = getEntries();
+  var years = new Set(entries.map(function(e){ return getFiscalYear(e.date); }));
+  var thisYear = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1;
   years.add(thisYear);
   return Array.from(years).sort().reverse();
 }
-function getYearLabel(y) { return `${y}年度（${y}/4/1 〜 ${+y+1}/3/31）`; }
+function getYearLabel(y) { return y + '年度（' + y + '/4/1 〜 ' + (+y+1) + '/3/31）'; }
 
 // ============================
 //   LOGIN / LOGOUT
@@ -840,14 +838,19 @@ function getYearLabel(y) { return `${y}年度（${y}/4/1 〜 ${+y+1}/3/31）`; }
 loadAll();
 
 function doLogin() {
-  const orgId = document.getElementById('loginOrgId').value.trim();
-  const orgName = document.getElementById('loginOrgName').value.trim();
-  const pw = document.getElementById('loginPassword').value;
-  if (!orgId || !orgName) { showToast('団体IDと団体名を入力してください'); return; }
+  var orgId   = document.getElementById('loginOrgId').value.trim();
+  var orgName = document.getElementById('loginOrgName').value.trim();
+  var pw      = document.getElementById('loginPassword').value;
+
+  // 🔐 ログイン入力値のバリデーション
+  var orgIdCheck = validateInput(orgId, '団体ID', 50);
+  if (!orgIdCheck.ok) { showToast(orgIdCheck.reason); return; }
+  var orgNameCheck = validateInput(orgName, '団体名', 100);
+  if (!orgNameCheck.ok) { showToast(orgNameCheck.reason); return; }
+
   if (!pw) { showToast('パスワードを入力してください'); return; }
 
   if (!allData[orgId]) {
-    // 新規登録
     allData[orgId] = { password: pw, orgName: orgName, entries: [] };
     saveAll();
     showToast('新規団体を作成しました');
@@ -871,7 +874,7 @@ function doLogout() {
 }
 
 function changePassword() {
-  const np = prompt('新しいパスワードを入力してください:');
+  var np = prompt('新しいパスワードを入力してください:');
   if (!np) return;
   allData[currentOrg].password = np;
   saveAll();
@@ -889,37 +892,30 @@ function initApp() {
 }
 
 function setTodayDate() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('entryDate').value = today;
+  document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
 }
 
 function populateYearSelects() {
-  const years = getFiscalYears();
-  ['filterYear','monthlyYear','subjectYear','reportYear'].forEach(id => {
-    const sel = document.getElementById(id);
-    const cur = sel.value;
+  var years = getFiscalYears();
+  ['filterYear','monthlyYear','subjectYear','reportYear'].forEach(function(id) {
+    var sel = document.getElementById(id);
     sel.innerHTML = '<option value="">年度を選択</option>';
-    years.forEach(y => {
-      const opt = document.createElement('option');
+    years.forEach(function(y) {
+      var opt = document.createElement('option');
       opt.value = y;
       opt.textContent = getYearLabel(y);
       sel.appendChild(opt);
     });
     if (years.length > 0) sel.value = years[0];
-    else if (cur) sel.value = cur;
   });
 }
-
-// ============================
-//   NAVIGATION - handled above in MODAL HELPERS
-// ============================
 
 // ============================
 //   RADIO STYLING
 // ============================
 function updateRadio() {
-  const typeVal = document.querySelector('input[name="type"]:checked')?.value;
-  const payVal = document.querySelector('input[name="payment"]:checked')?.value;
+  var typeVal = document.querySelector('input[name="type"]:checked') && document.querySelector('input[name="type"]:checked').value;
+  var payVal  = document.querySelector('input[name="payment"]:checked') && document.querySelector('input[name="payment"]:checked').value;
   document.getElementById('lbl-income').classList.toggle('checked', typeVal === 'income');
   document.getElementById('lbl-expense').classList.toggle('checked', typeVal === 'expense');
   document.getElementById('lbl-bank').classList.toggle('checked', payVal === 'bank');
@@ -927,40 +923,54 @@ function updateRadio() {
 }
 
 // ============================
-//   ENTRY SUBMIT
+//   🔐 ENTRY SUBMIT（セキュリティ強化版）
 // ============================
-// 収入科目・支出科目の定義（矛盾チェック用）
 function getSubjectType(subjectName) {
-  const subs = getSubjects();
+  var subs = getSubjects();
   if (subs.income.includes(subjectName)) return 'income';
   if (subs.expense.includes(subjectName)) return 'expense';
-  return null; // どちらにも属さない（カスタム科目など）
+  return null;
 }
 
 function submitEntry() {
-  const type = document.querySelector('input[name="type"]:checked')?.value;
-  const date = document.getElementById('entryDate').value;
-  const amount = parseInt(document.getElementById('entryAmount').value);
-  const desc = document.getElementById('entryDesc').value.trim();
-  const subject = document.getElementById('entrySubject').value;
-  const voucherNo = document.getElementById('entryVoucherNo').value.trim();
-  const payment = document.querySelector('input[name="payment"]:checked')?.value;
+  var type      = document.querySelector('input[name="type"]:checked') && document.querySelector('input[name="type"]:checked').value;
+  var date      = document.getElementById('entryDate').value;
+  var amount    = parseInt(document.getElementById('entryAmount').value);
+  var desc      = document.getElementById('entryDesc').value.trim();
+  var subject   = document.getElementById('entrySubject').value;
+  var voucherNo = document.getElementById('entryVoucherNo').value.trim();
+  var payment   = document.querySelector('input[name="payment"]:checked') && document.querySelector('input[name="payment"]:checked').value;
 
+  // 🔐 ① 大量送信チェック（1分以内に6回以上は警告）
+  if (!checkSubmitRate('entryForm', 6, 60000)) {
+    showToast('⚠️ 短時間に多くの登録が行われています。少し待ってから再試行してください。');
+    return;
+  }
+
+  // 🔐 ② 基本バリデーション
   if (!date) { showToast('日付を入力してください'); return; }
   if (!amount || amount <= 0) { showToast('金額を入力してください'); return; }
-  if (!desc) { showToast('摘要を入力してください'); return; }
   if (!subject) { showToast('勘定科目を選択してください'); return; }
 
-  // ===== 矛盾チェック =====
-  const subjectType = getSubjectType(subject);
+  // 🔐 ③ 摘要の入力値チェック（XSS・異常文字列）
+  var descCheck = validateInput(desc, '摘要', 200);
+  if (!descCheck.ok) { showToast(descCheck.reason); return; }
+
+  // 🔐 ④ 伝票番号チェック（省略可だが入力ありの場合のみ）
+  if (voucherNo) {
+    var voucherCheck = validateInput(voucherNo, '伝票番号', 50);
+    if (!voucherCheck.ok) { showToast(voucherCheck.reason); return; }
+  }
+
+  // ⑤ 科目矛盾チェック（既存ロジック）
+  var subjectType = getSubjectType(subject);
   if (subjectType && subjectType !== type) {
-    const typeLabel = type === 'income' ? '収入' : '支出';
-    const subjectTypeLabel = subjectType === 'income' ? '収入科目' : '支出科目';
+    var typeLabel        = type === 'income' ? '収入' : '支出';
+    var subjectTypeLabel = subjectType === 'income' ? '収入科目' : '支出科目';
     showConfirmModal(
-      `⚠️ 入力内容に矛盾があります\n\n「${subject}」は${subjectTypeLabel}ですが、\n「${typeLabel}」として登録しようとしています。\n\nこのまま登録しますか？`,
-      () => doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment),
-      'このまま登録する',
-      '#e67e22'
+      '⚠️ 入力内容に矛盾があります\n\n「' + subject + '」は' + subjectTypeLabel + 'ですが、\n「' + typeLabel + '」として登録しようとしています。\n\nこのまま登録しますか？',
+      function(){ doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment); },
+      'このまま登録する', '#e67e22'
     );
     return;
   }
@@ -969,9 +979,10 @@ function submitEntry() {
 }
 
 function doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment) {
-  const entry = {
+  var entry = {
     id: Date.now().toString(),
-    type, date, amount, desc, subject, voucherNo, payment,
+    type: type, date: date, amount: amount,
+    desc: desc, subject: subject, voucherNo: voucherNo, payment: payment,
     createdAt: new Date().toISOString()
   };
   addEntry(entry);
@@ -991,28 +1002,27 @@ function clearForm() {
 // ============================
 //   LEDGER TAB
 // ============================
-let currentLedgerTab = 'bank'; // 'bank' or 'cash'
+var currentLedgerTab = 'bank';
 
 function switchLedgerTab(tab) {
   currentLedgerTab = tab;
-  const isBank = tab === 'bank';
+  var isBank = tab === 'bank';
   document.getElementById('tabBank').style.background = isBank ? 'var(--navy)' : 'var(--bg2)';
-  document.getElementById('tabBank').style.color = isBank ? 'white' : 'var(--text2)';
+  document.getElementById('tabBank').style.color      = isBank ? 'white' : 'var(--text2)';
   document.getElementById('tabCash').style.background = isBank ? 'var(--bg2)' : '#8a6020';
-  document.getElementById('tabCash').style.color = isBank ? 'var(--text2)' : 'white';
+  document.getElementById('tabCash').style.color      = isBank ? 'var(--text2)' : 'white';
   document.getElementById('ledgerTabLabel').textContent = isBank ? '🏦 銀行口座出納帳' : '💴 現金出納帳';
   renderLedger();
 }
 
 function updateBalanceDisplay() {
-  const entries = getEntries().sort((a,b) => a.date.localeCompare(b.date));
-  let bank = 0, cash = 0;
-  entries.forEach(e => {
-    const v = e.type === 'income' ? e.amount : -e.amount;
-    if (e.payment === 'bank') bank += v;
-    else cash += v;
+  var entries = getEntries().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var bank = 0, cash = 0;
+  entries.forEach(function(e) {
+    var v = e.type === 'income' ? e.amount : -e.amount;
+    if (e.payment === 'bank') bank += v; else cash += v;
   });
-  const fmt = v => (v < 0 ? '△' : '') + '¥' + Math.abs(v).toLocaleString();
+  var fmt = function(v){ return (v < 0 ? '△' : '') + '¥' + Math.abs(v).toLocaleString(); };
   document.getElementById('balanceBankDisp').textContent = fmt(bank);
   document.getElementById('balanceCashDisp').textContent = fmt(cash);
 }
@@ -1022,654 +1032,409 @@ function updateBalanceDisplay() {
 // ============================
 function renderLedger() {
   updateBalanceDisplay();
-  const year = document.getElementById('filterYear')?.value;
-  const month = document.getElementById('filterMonth')?.value;
-  const type = document.getElementById('filterType')?.value;
-  let entries = getEntries().filter(e => {
+  var year  = document.getElementById('filterYear')  && document.getElementById('filterYear').value;
+  var month = document.getElementById('filterMonth') && document.getElementById('filterMonth').value;
+  var type  = document.getElementById('filterType')  && document.getElementById('filterType').value;
+  var entries = getEntries().filter(function(e) {
     if (e.payment !== currentLedgerTab) return false;
     if (year && getFiscalYear(e.date) != year) return false;
-    if (month) {
-      const m = new Date(e.date).getMonth() + 1;
-      if (m != month) return false;
-    }
+    if (month && (new Date(e.date).getMonth()+1) != month) return false;
     if (type && e.type !== type) return false;
     return true;
-  }).sort((a,b) => a.date.localeCompare(b.date));
+  }).sort(function(a,b){ return a.date.localeCompare(b.date); });
 
-  const tbl = document.getElementById('ledgerTable');
+  var tbl = document.getElementById('ledgerTable');
   if (!entries.length) {
-    tbl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>データがありません</p></div>`;
+    tbl.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>データがありません</p></div>';
     return;
   }
 
-  let balance = 0;
-  let html = `<table>
-    <thead><tr>
-      <th>日付</th><th>摘要</th><th>科目</th><th>伝票No</th>
-      <th>収入</th><th>支出</th><th>残高</th><th class="no-print">削除</th>
-    </tr></thead><tbody>`;
-  entries.forEach(e => {
-    const inc = e.type === 'income' ? e.amount : 0;
-    const exp = e.type === 'expense' ? e.amount : 0;
+  var balance = 0;
+  var html = '<table><thead><tr><th>日付</th><th>摘要</th><th>科目</th><th>伝票No</th><th>収入</th><th>支出</th><th>残高</th><th class="no-print">削除</th></tr></thead><tbody>';
+  entries.forEach(function(e) {
+    var inc = e.type === 'income' ? e.amount : 0;
+    var exp = e.type === 'expense' ? e.amount : 0;
     balance += inc - exp;
-    html += `<tr>
-      <td>${e.date}</td>
-      <td>${e.desc}</td>
-      <td>${e.subject}</td>
-      <td>${e.voucherNo || ''}</td>
-      <td class="text-right ${e.type==='income'?'amount-income':''}">${inc?'¥'+inc.toLocaleString():''}</td>
-      <td class="text-right ${e.type==='expense'?'amount-expense':''}">${exp?'¥'+exp.toLocaleString():''}</td>
-      <td class="text-right">${balance<0?'△':''}<strong>¥${Math.abs(balance).toLocaleString()}</strong></td>
-      <td class="no-print"><button onclick="confirmDelete('${e.id}')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:20px;padding:4px 8px;">🗑️</button></td>
-    </tr>`;
+    html += '<tr>' +
+      '<td>' + e.date + '</td>' +
+      '<td>' + e.desc + '</td>' +
+      '<td>' + e.subject + '</td>' +
+      '<td>' + (e.voucherNo || '') + '</td>' +
+      '<td class="text-right ' + (e.type==='income'?'amount-income':'') + '">' + (inc?'¥'+inc.toLocaleString():'') + '</td>' +
+      '<td class="text-right ' + (e.type==='expense'?'amount-expense':'') + '">' + (exp?'¥'+exp.toLocaleString():'') + '</td>' +
+      '<td class="text-right">' + (balance<0?'△':'') + '<strong>¥' + Math.abs(balance).toLocaleString() + '</strong></td>' +
+      '<td class="no-print"><button onclick="confirmDelete(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:20px;padding:4px 8px;">🗑️</button></td>' +
+      '</tr>';
   });
   html += '</tbody></table>';
   tbl.innerHTML = html;
 }
 
 function confirmDelete(id) {
-  const entry = getEntries().find(e => e.id === id);
+  var entry = getEntries().find(function(e){ return e.id === id; });
   if (!entry) return;
   showConfirmModal(
-    `この伝票を削除しますか？\n\n日付：${entry.date}\n摘要：${entry.desc}\n金額：¥${entry.amount.toLocaleString()}`,
-    () => {
-      allData[currentOrg].entries = allData[currentOrg].entries.filter(e => e.id !== id);
+    'この伝票を削除しますか？\n\n日付：' + entry.date + '\n摘要：' + entry.desc + '\n金額：¥' + entry.amount.toLocaleString(),
+    function() {
+      allData[currentOrg].entries = allData[currentOrg].entries.filter(function(e){ return e.id !== id; });
       saveAll();
       renderLedger();
       showToast('🗑️ 削除しました');
-    },
-    '削除する'
+    }, '削除する'
   );
-}
-
-function deleteEntry(id) {
-  allData[currentOrg].entries = allData[currentOrg].entries.filter(e => e.id !== id);
-  saveAll();
 }
 
 // ============================
 //   MONTHLY SUMMARY
 // ============================
-const MONTHS = [4,5,6,7,8,9,10,11,12,1,2,3];
-const MONTH_LABELS = ['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月'];
+var MONTHS       = [4,5,6,7,8,9,10,11,12,1,2,3];
+var MONTH_LABELS = ['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月','3月'];
 
 function renderMonthly() {
-  const year = document.getElementById('monthlyYear')?.value;
+  var year = document.getElementById('monthlyYear') && document.getElementById('monthlyYear').value;
   if (!year) return;
-  const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
-
-  let totalInc = 0, totalExp = 0;
-  const rows = MONTHS.map((m, i) => {
-    const me = entries.filter(e => new Date(e.date).getMonth()+1 === m);
-    const inc = me.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
-    const exp = me.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  var entries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
+  var totalInc = 0, totalExp = 0;
+  var rows = MONTHS.map(function(m, i) {
+    var me  = entries.filter(function(e){ return new Date(e.date).getMonth()+1 === m; });
+    var inc = me.filter(function(e){ return e.type==='income'; }).reduce(function(s,e){ return s+e.amount; }, 0);
+    var exp = me.filter(function(e){ return e.type==='expense'; }).reduce(function(s,e){ return s+e.amount; }, 0);
     totalInc += inc; totalExp += exp;
-    return { label: MONTH_LABELS[i], inc, exp, bal: inc - exp };
+    return { label: MONTH_LABELS[i], inc: inc, exp: exp, bal: inc - exp };
   });
-
-  const totalBal = totalInc - totalExp;
-  const div = document.getElementById('monthlySummary');
-  div.innerHTML = `
-    <div class="summary-grid">
-      <div class="summary-card income">
-        <div class="label">年度収入合計</div>
-        <div class="value">¥${totalInc.toLocaleString()}</div>
-      </div>
-      <div class="summary-card expense">
-        <div class="label">年度支出合計</div>
-        <div class="value">¥${totalExp.toLocaleString()}</div>
-      </div>
-      <div class="summary-card balance" style="grid-column:1/-1">
-        <div class="label">収支差額</div>
-        <div class="value" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">
-          ${totalBal<0?'△':''}¥${Math.abs(totalBal).toLocaleString()}
-        </div>
-      </div>
-    </div>
-    <div class="ledger-table">
-    <table class="month-table">
-      <thead><tr><th>月</th><th class="text-right">収入</th><th class="text-right">支出</th><th class="text-right">差引残高</th></tr></thead>
-      <tbody>
-      ${rows.map(r=>`<tr>
-        <td>${r.label}</td>
-        <td class="text-right amount-income">${r.inc?'¥'+r.inc.toLocaleString():'-'}</td>
-        <td class="text-right amount-expense">${r.exp?'¥'+r.exp.toLocaleString():'-'}</td>
-        <td class="text-right" style="font-weight:600;color:${r.bal>=0?'var(--green)':'var(--red)'}">${r.bal===0?'-':(r.bal<0?'△':'')+'¥'+Math.abs(r.bal).toLocaleString()}</td>
-      </tr>`).join('')}
-      <tr style="font-weight:700;background:var(--bg2);border-top:2px solid var(--navy)">
-        <td>合計</td>
-        <td class="text-right amount-income">¥${totalInc.toLocaleString()}</td>
-        <td class="text-right amount-expense">¥${totalExp.toLocaleString()}</td>
-        <td class="text-right" style="font-weight:700;color:${totalBal>=0?'var(--green)':'var(--red)'}">
-          ${totalBal<0?'△':''}¥${Math.abs(totalBal).toLocaleString()}
-        </td>
-      </tr>
-      </tbody>
-    </table>
-    </div>`;
+  var totalBal = totalInc - totalExp;
+  document.getElementById('monthlySummary').innerHTML =
+    '<div class="summary-grid">' +
+    '<div class="summary-card income"><div class="label">年度収入合計</div><div class="value">¥' + totalInc.toLocaleString() + '</div></div>' +
+    '<div class="summary-card expense"><div class="label">年度支出合計</div><div class="value">¥' + totalExp.toLocaleString() + '</div></div>' +
+    '<div class="summary-card balance" style="grid-column:1/-1"><div class="label">収支差額</div>' +
+    '<div class="value" style="color:' + (totalBal>=0?'var(--green)':'var(--red)') + '">' +
+    (totalBal<0?'△':'') + '¥' + Math.abs(totalBal).toLocaleString() + '</div></div></div>' +
+    '<div class="ledger-table"><table class="month-table">' +
+    '<thead><tr><th>月</th><th class="text-right">収入</th><th class="text-right">支出</th><th class="text-right">差引残高</th></tr></thead><tbody>' +
+    rows.map(function(r){ return '<tr><td>' + r.label + '</td>' +
+      '<td class="text-right amount-income">' + (r.inc?'¥'+r.inc.toLocaleString():'-') + '</td>' +
+      '<td class="text-right amount-expense">' + (r.exp?'¥'+r.exp.toLocaleString():'-') + '</td>' +
+      '<td class="text-right" style="font-weight:600;color:' + (r.bal>=0?'var(--green)':'var(--red)') + '">' +
+      (r.bal===0?'-':(r.bal<0?'△':'')+'¥'+Math.abs(r.bal).toLocaleString()) + '</td></tr>'; }).join('') +
+    '<tr style="font-weight:700;background:var(--bg2);border-top:2px solid var(--navy)"><td>合計</td>' +
+    '<td class="text-right amount-income">¥' + totalInc.toLocaleString() + '</td>' +
+    '<td class="text-right amount-expense">¥' + totalExp.toLocaleString() + '</td>' +
+    '<td class="text-right" style="font-weight:700;color:' + (totalBal>=0?'var(--green)':'var(--red)') + '">' +
+    (totalBal<0?'△':'') + '¥' + Math.abs(totalBal).toLocaleString() + '</td></tr>' +
+    '</tbody></table></div>';
 }
 
 // ============================
 //   SUBJECT SUMMARY
 // ============================
 function renderSubject() {
-  const year = document.getElementById('subjectYear')?.value;
+  var year = document.getElementById('subjectYear') && document.getElementById('subjectYear').value;
   if (!year) return;
-  const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
-  const subjects = {};
-  entries.forEach(e => {
-    if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0, type: e.type };
+  var entries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
+  var subjects = {};
+  entries.forEach(function(e) {
+    if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
     if (e.type === 'income') subjects[e.subject].income += e.amount;
     else subjects[e.subject].expense += e.amount;
   });
-
-  const incSubs = Object.entries(subjects).filter(([_,v])=>v.income>0);
-  const expSubs = Object.entries(subjects).filter(([_,v])=>v.expense>0);
-  const totalInc = incSubs.reduce((s,[_,v])=>s+v.income,0);
-  const totalExp = expSubs.reduce((s,[_,v])=>s+v.expense,0);
-
-  const div = document.getElementById('subjectSummary');
-  div.innerHTML = `
-    <div class="report-section">
-      <h3>📈 収入科目別</h3>
-      <div class="ledger-table"><table class="report-table">
-        <thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead>
-        <tbody>
-        ${incSubs.map(([k,v])=>`<tr><td>${k}</td>
-          <td class="text-right amount-income">¥${v.income.toLocaleString()}</td>
-          <td class="text-right">${totalInc?Math.round(v.income/totalInc*100):0}%</td></tr>`).join('')}
-        <tr class="subtotal"><td>合計</td><td class="text-right amount-income">¥${totalInc.toLocaleString()}</td><td></td></tr>
-        </tbody>
-      </table></div>
-    </div>
-    <div class="report-section">
-      <h3>📉 支出科目別</h3>
-      <div class="ledger-table"><table class="report-table">
-        <thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead>
-        <tbody>
-        ${expSubs.map(([k,v])=>`<tr><td>${k}</td>
-          <td class="text-right amount-expense">¥${v.expense.toLocaleString()}</td>
-          <td class="text-right">${totalExp?Math.round(v.expense/totalExp*100):0}%</td></tr>`).join('')}
-        <tr class="subtotal"><td>合計</td><td class="text-right amount-expense">¥${totalExp.toLocaleString()}</td><td></td></tr>
-        </tbody>
-      </table></div>
-    </div>`;
+  var incSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].income > 0; });
+  var expSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].expense > 0; });
+  var totalInc = incSubs.reduce(function(s,kv){ return s+kv[1].income; }, 0);
+  var totalExp = expSubs.reduce(function(s,kv){ return s+kv[1].expense; }, 0);
+  document.getElementById('subjectSummary').innerHTML =
+    '<div class="report-section"><h3>📈 収入科目別</h3><div class="ledger-table"><table class="report-table">' +
+    '<thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead><tbody>' +
+    incSubs.map(function(kv){ return '<tr><td>' + kv[0] + '</td><td class="text-right amount-income">¥' + kv[1].income.toLocaleString() + '</td><td class="text-right">' + (totalInc?Math.round(kv[1].income/totalInc*100):0) + '%</td></tr>'; }).join('') +
+    '<tr class="subtotal"><td>合計</td><td class="text-right amount-income">¥' + totalInc.toLocaleString() + '</td><td></td></tr>' +
+    '</tbody></table></div></div>' +
+    '<div class="report-section"><h3>📉 支出科目別</h3><div class="ledger-table"><table class="report-table">' +
+    '<thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead><tbody>' +
+    expSubs.map(function(kv){ return '<tr><td>' + kv[0] + '</td><td class="text-right amount-expense">¥' + kv[1].expense.toLocaleString() + '</td><td class="text-right">' + (totalExp?Math.round(kv[1].expense/totalExp*100):0) + '%</td></tr>'; }).join('') +
+    '<tr class="subtotal"><td>合計</td><td class="text-right amount-expense">¥' + totalExp.toLocaleString() + '</td><td></td></tr>' +
+    '</tbody></table></div></div>';
 }
 
 // ============================
 //   REPORT
 // ============================
+var currentReportTab = 'own';
+
 function renderReport() {
-  const year = document.getElementById('reportYear')?.value;
+  var year = document.getElementById('reportYear') && document.getElementById('reportYear').value;
   if (!year) return;
-  const entries = getEntries().filter(e => getFiscalYear(e.date) == year);
+  var entries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
+  if (currentReportTab === 'yoko') { renderYokoReport(year, entries); return; }
 
-  // 横浜市形式
-  if (currentReportTab === 'yoko') {
-    renderYokoReport(year, entries);
-    return;
-  }
-
-  // 自団体形式（従来）
-  const orgName = allData[currentOrg]?.orgName || '';
-  const subjects = {};
-  entries.forEach(e => {
+  var orgName  = allData[currentOrg] && allData[currentOrg].orgName ? allData[currentOrg].orgName : '';
+  var subjects = {};
+  entries.forEach(function(e) {
     if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
     if (e.type === 'income') subjects[e.subject].income += e.amount;
     else subjects[e.subject].expense += e.amount;
   });
+  var incSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].income > 0; });
+  var expSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].expense > 0; });
+  var totalInc = incSubs.reduce(function(s,kv){ return s+kv[1].income; }, 0);
+  var totalExp = expSubs.reduce(function(s,kv){ return s+kv[1].expense; }, 0);
+  var balance  = totalInc - totalExp;
 
-  const incSubs = Object.entries(subjects).filter(([_,v])=>v.income>0);
-  const expSubs = Object.entries(subjects).filter(([_,v])=>v.expense>0);
-  const totalInc = incSubs.reduce((s,[_,v])=>s+v.income,0);
-  const totalExp = expSubs.reduce((s,[_,v])=>s+v.expense,0);
-  const balance = totalInc - totalExp;
-
-  document.getElementById('reportContent').innerHTML = `
-    <div class="report-header">
-      <h2>${orgName}</h2>
-      <h2>${year}年度　決算報告書</h2>
-      <p>会計年度：${year}年4月1日 〜 ${+year+1}年3月31日</p>
-    </div>
-    <div class="report-section">
-      <h3>【収入の部】</h3>
-      <div class="ledger-table"><table class="report-table">
-        <thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead>
-        <tbody>
-        ${incSubs.map(([k,v])=>`<tr><td>　${k}</td><td class="text-right">-</td><td class="text-right amount-income">¥${v.income.toLocaleString()}</td><td></td></tr>`).join('')}
-        <tr class="subtotal"><td><strong>収入合計</strong></td><td class="text-right">-</td><td class="text-right amount-income"><strong>¥${totalInc.toLocaleString()}</strong></td><td></td></tr>
-        </tbody>
-      </table></div>
-    </div>
-    <div class="report-section">
-      <h3>【支出の部】</h3>
-      <div class="ledger-table"><table class="report-table">
-        <thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead>
-        <tbody>
-        ${expSubs.map(([k,v])=>`<tr><td>　${k}</td><td class="text-right">-</td><td class="text-right amount-expense">¥${v.expense.toLocaleString()}</td><td></td></tr>`).join('')}
-        <tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right">-</td><td class="text-right amount-expense"><strong>¥${totalExp.toLocaleString()}</strong></td><td></td></tr>
-        </tbody>
-      </table></div>
-    </div>
-    <div class="ledger-table"><table class="report-table">
-      <tr class="total">
-        <td><strong>【収支差額】（収入合計 − 支出合計）</strong></td>
-        <td class="text-right"><strong>${balance<0?'△':''}¥${Math.abs(balance).toLocaleString()}</strong></td>
-      </tr>
-    </table></div>
-    <div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">
-      以上のとおり${year}年度の会計を報告いたします。<br><br>
-      <div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px">
-        <span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
-        <span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
-      </div>
-    </div>`;
+  document.getElementById('reportContent').innerHTML =
+    '<div class="report-header"><h2>' + orgName + '</h2><h2>' + year + '年度　決算報告書</h2><p>会計年度：' + year + '年4月1日 〜 ' + (+year+1) + '年3月31日</p></div>' +
+    '<div class="report-section"><h3>【収入の部】</h3><div class="ledger-table"><table class="report-table">' +
+    '<thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead><tbody>' +
+    incSubs.map(function(kv){ return '<tr><td>　' + kv[0] + '</td><td class="text-right">-</td><td class="text-right amount-income">¥' + kv[1].income.toLocaleString() + '</td><td></td></tr>'; }).join('') +
+    '<tr class="subtotal"><td><strong>収入合計</strong></td><td class="text-right">-</td><td class="text-right amount-income"><strong>¥' + totalInc.toLocaleString() + '</strong></td><td></td></tr>' +
+    '</tbody></table></div></div>' +
+    '<div class="report-section"><h3>【支出の部】</h3><div class="ledger-table"><table class="report-table">' +
+    '<thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead><tbody>' +
+    expSubs.map(function(kv){ return '<tr><td>　' + kv[0] + '</td><td class="text-right">-</td><td class="text-right amount-expense">¥' + kv[1].expense.toLocaleString() + '</td><td></td></tr>'; }).join('') +
+    '<tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right">-</td><td class="text-right amount-expense"><strong>¥' + totalExp.toLocaleString() + '</strong></td><td></td></tr>' +
+    '</tbody></table></div></div>' +
+    '<div class="ledger-table"><table class="report-table"><tr class="total"><td><strong>【収支差額】（収入合計 − 支出合計）</strong></td><td class="text-right"><strong>' + (balance<0?'△':'') + '¥' + Math.abs(balance).toLocaleString() + '</strong></td></tr></table></div>' +
+    '<div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">以上のとおり' + year + '年度の会計を報告いたします。<br><br><div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px"><span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span><span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span></div></div>';
 }
 
 // ============================
-//   横浜市 科目定義
+//   横浜市科目定義
 // ============================
-const YOKO_SUBJECTS = {
-  income: [
-    '会費',
-    '地域活動推進費',
-    '地域防犯灯維持管理費',
-    '事業収入',
-    '寄付金・祝金等',
-    '会館使用料',
-    '団体交付金',
-    '利息等',
-    '前年度からの繰入金',
-    'その他収入',
-  ],
-  expense: [
-    // 事務費
-    '【事務費】会議費',
-    '【事務費】事務費',
-    '【事務費】人件費',
-    '【事務費】会館(会場)借上料',
-    '【事務費】会館光熱水費',
-    '【事務費】会館修繕費',
-    '【事務費】その他',
-    // 事業費
-    '【事業費】環境事業費',
-    '【事業費】安全・安心環境づくり事業費',
-    '【事業費】社会教育事業費',
-    '【事業費】レクリエーション費',
-    '【事業費】福利厚生事業費',
-    '【事業費】文化事業費',
-    '【事業費】その他',
-    // 補助事業費
-    '【補助】地域防犯灯維持管理費',
-    '【補助】町の防災組織活動費',
-    '【補助】自治会町内会館脱炭素化推進事業補助金',
-    '【補助】地域の防犯力向上緊急補助金',
-    // その他
-    '【その他】会館建設・修繕積立金',
-    '【その他】交際費',
-    '【その他】慶弔費',
-    '【その他】慶弔会費',
-    '【その他】寄付金・募金',
-    '【その他】予備費',
-    '【その他】その他',
-  ]
+var YOKO_SUBJECTS = {
+  income: ['会費','地域活動推進費','地域防犯灯維持管理費','事業収入','寄付金・祝金等','会館使用料','団体交付金','利息等','前年度からの繰入金','その他収入'],
+  expense: ['【事務費】会議費','【事務費】事務費','【事務費】人件費','【事務費】会館(会場)借上料','【事務費】会館光熱水費','【事務費】会館修繕費','【事務費】その他','【事業費】環境事業費','【事業費】安全・安心環境づくり事業費','【事業費】社会教育事業費','【事業費】レクリエーション費','【事業費】福利厚生事業費','【事業費】文化事業費','【事業費】その他','【補助】地域防犯灯維持管理費','【補助】町の防災組織活動費','【補助】自治会町内会館脱炭素化推進事業補助金','【補助】地域の防犯力向上緊急補助金','【その他】会館建設・修繕積立金','【その他】交際費','【その他】慶弔費','【その他】慶弔会費','【その他】寄付金・募金','【その他】予備費','【その他】その他']
 };
 
-// マッピング保存・取得
 function getMapping() {
-  const key = 'yokoMapping_' + currentOrg;
-  const raw = localStorage.getItem(key);
+  var key = 'yokoMapping_' + currentOrg;
+  var raw = localStorage.getItem(key);
   return raw ? JSON.parse(raw) : {};
 }
 function saveMapping(map) {
   localStorage.setItem('yokoMapping_' + currentOrg, JSON.stringify(map));
 }
-
-// マッピング設定画面の描画
 function renderMappingSettings() {
-  const subs = getSubjects();
-  const mapping = getMapping();
-  const allMySubs = [
-    ...subs.income.map(s => ({ name: s, type: 'income' })),
-    ...subs.expense.map(s => ({ name: s, type: 'expense' }))
-  ];
-  const mappedCount = allMySubs.filter(s => mapping[s.name]).length;
-  const total = allMySubs.length;
+  var subs     = getSubjects();
+  var mapping  = getMapping();
+  var allMySubs = subs.income.map(function(s){ return { name:s, type:'income' }; })
+    .concat(subs.expense.map(function(s){ return { name:s, type:'expense' }; }));
+  var mappedCount = allMySubs.filter(function(s){ return mapping[s.name]; }).length;
+  var total = allMySubs.length;
 
-  let html = `
-    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
-      <div style="background:#e8f5ef;border:1px solid var(--green);border-radius:10px;padding:10px 16px;font-size:13px;">
-        ✅ 設定済み：<strong style="color:var(--green);font-size:16px;">${mappedCount}</strong> 科目
-      </div>
-      <div style="background:${total-mappedCount>0?'#fdf0ee':'var(--bg2)'};border:1px solid ${total-mappedCount>0?'var(--red)':'var(--border)'};border-radius:10px;padding:10px 16px;font-size:13px;">
-        ${total-mappedCount>0?'⚠️':'✅'} 未設定：<strong style="color:${total-mappedCount>0?'var(--red)':'var(--text2)'};font-size:16px;">${total-mappedCount}</strong> 科目
-      </div>
-    </div>`;
+  var html = '<div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">' +
+    '<div style="background:#e8f5ef;border:1px solid var(--green);border-radius:10px;padding:10px 16px;font-size:13px;">✅ 設定済み：<strong style="color:var(--green);font-size:16px;">' + mappedCount + '</strong> 科目</div>' +
+    '<div style="background:' + (total-mappedCount>0?'#fdf0ee':'var(--bg2)') + ';border:1px solid ' + (total-mappedCount>0?'var(--red)':'var(--border)') + ';border-radius:10px;padding:10px 16px;font-size:13px;">' +
+    (total-mappedCount>0?'⚠️':'✅') + ' 未設定：<strong style="color:' + (total-mappedCount>0?'var(--red)':'var(--text2)') + ';font-size:16px;">' + (total-mappedCount) + '</strong> 科目</div></div>';
 
-  html += `<table style="width:100%;border-collapse:collapse;font-size:13px;">
-    <thead><tr style="background:var(--navy);color:white;">
-      <th style="padding:9px 10px;text-align:left;">自団体の科目</th>
-      <th style="padding:9px 10px;text-align:center;">種別</th>
-      <th style="padding:9px 10px;text-align:left;">→ 横浜市の科目</th>
-    </tr></thead><tbody>`;
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--navy);color:white;"><th style="padding:9px 10px;text-align:left;">自団体の科目</th><th style="padding:9px 10px;text-align:center;">種別</th><th style="padding:9px 10px;text-align:left;">→ 横浜市の科目</th></tr></thead><tbody>';
 
-  allMySubs.forEach((s, i) => {
-    const yokoList = s.type === 'income' ? YOKO_SUBJECTS.income : YOKO_SUBJECTS.expense;
-    const cur = mapping[s.name] || '';
-    const matched = cur ? `style="border-color:var(--green);background:#f0faf4;"` : '';
-    html += `<tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:8px 10px;font-weight:500;">${s.name}</td>
-      <td style="padding:8px 10px;text-align:center;">
-        <span class="badge ${s.type==='income'?'badge-bank':'badge-cash'}">${s.type==='income'?'収入':'支出'}</span>
-      </td>
-      <td style="padding:6px 8px;">
-        <select data-subject="${s.name}" onchange="updateMapping(this)"
-          style="width:100%;padding:7px 10px;border:2px solid ${cur?'var(--green)':'var(--border)'};border-radius:8px;
-          font-family:inherit;font-size:13px;background:${cur?'#f0faf4':'var(--bg)'};-webkit-appearance:none;">
-          <option value="">-- 対応なし --</option>
-          ${yokoList.map(y => `<option value="${y}" ${cur===y?'selected':''}>${y}</option>`).join('')}
-        </select>
-      </td>
-    </tr>`;
+  allMySubs.forEach(function(s) {
+    var yokoList = s.type === 'income' ? YOKO_SUBJECTS.income : YOKO_SUBJECTS.expense;
+    var cur = mapping[s.name] || '';
+    html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 10px;font-weight:500;">' + s.name + '</td>' +
+      '<td style="padding:8px 10px;text-align:center;"><span class="badge ' + (s.type==='income'?'badge-bank':'badge-cash') + '">' + (s.type==='income'?'収入':'支出') + '</span></td>' +
+      '<td style="padding:6px 8px;"><select data-subject="' + s.name + '" onchange="updateMapping(this)" style="width:100%;padding:7px 10px;border:2px solid ' + (cur?'var(--green)':'var(--border)') + ';border-radius:8px;font-family:inherit;font-size:13px;background:' + (cur?'#f0faf4':'var(--bg)') + ';-webkit-appearance:none;">' +
+      '<option value="">-- 対応なし --</option>' +
+      yokoList.map(function(y){ return '<option value="' + y + '" ' + (cur===y?'selected':'') + '>' + y + '</option>'; }).join('') +
+      '</select></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('mappingList').innerHTML = html;
 }
 
 function updateMapping(sel) {
-  const subject = sel.getAttribute('data-subject');
-  const mapping = getMapping();
-  if (sel.value) mapping[subject] = sel.value;
-  else delete mapping[subject];
+  var subject = sel.getAttribute('data-subject');
+  var mapping = getMapping();
+  if (sel.value) mapping[subject] = sel.value; else delete mapping[subject];
   saveMapping(mapping);
   showToast('✅ マッピングを保存しました');
 }
 
-// ============================
-//   報告書タブ切替
-// ============================
-let currentReportTab = 'own';
 function switchReportTab(tab) {
   currentReportTab = tab;
-  const isOwn = tab === 'own';
+  var isOwn = tab === 'own';
   document.getElementById('reportTabOwn').style.background = isOwn ? 'var(--navy)' : 'var(--bg2)';
-  document.getElementById('reportTabOwn').style.color = isOwn ? 'white' : 'var(--text2)';
+  document.getElementById('reportTabOwn').style.color      = isOwn ? 'white' : 'var(--text2)';
   document.getElementById('reportTabYoko').style.background = isOwn ? 'var(--bg2)' : '#1a3a5c';
-  document.getElementById('reportTabYoko').style.color = isOwn ? 'var(--text2)' : 'white';
+  document.getElementById('reportTabYoko').style.color      = isOwn ? 'var(--text2)' : 'white';
   renderReport();
 }
 
-// ============================
-//   横浜市報告書レンダリング
-// ============================
 function renderYokoReport(year, entries) {
-  const orgName = allData[currentOrg]?.orgName || '';
-  const mapping = getMapping();
-
-  // マッピングに従い横浜市科目ごとに集計
-  const yokoTotals = {};
-  entries.forEach(e => {
-    const yokoSubject = mapping[e.subject];
+  var orgName   = allData[currentOrg] && allData[currentOrg].orgName ? allData[currentOrg].orgName : '';
+  var mapping   = getMapping();
+  var yokoTotals = {};
+  entries.forEach(function(e) {
+    var yokoSubject = mapping[e.subject];
     if (!yokoSubject) return;
     if (!yokoTotals[yokoSubject]) yokoTotals[yokoSubject] = 0;
     yokoTotals[yokoSubject] += e.type === 'income' ? e.amount : -e.amount;
   });
+  var usedSubjects = Array.from(new Set(entries.map(function(e){ return e.subject; })));
+  var unmapped = usedSubjects.filter(function(s){ return !mapping[s]; });
 
-  // 未マッピング科目を収集（その年度に実際に入力があるもののみ）
-  const usedSubjects = [...new Set(entries.map(e => e.subject))];
-  const unmapped = usedSubjects.filter(s => !mapping[s]);
+  var incomeList  = YOKO_SUBJECTS.income;
+  var expenseList = YOKO_SUBJECTS.expense;
+  var totalInc    = incomeList.reduce(function(s,k){ return s + Math.max(0, yokoTotals[k]||0); }, 0);
+  var expTotals   = {};
+  expenseList.forEach(function(k){ expTotals[k] = Math.abs(yokoTotals[k] || 0); });
+  var totalExpCalc = expenseList.reduce(function(s,k){ return s + expTotals[k]; }, 0);
+  var balance = totalInc - totalExpCalc;
 
-  const incomeList = YOKO_SUBJECTS.income;
-  const expenseList = YOKO_SUBJECTS.expense;
+  var jimuhi  = expenseList.filter(function(k){ return k.startsWith('【事務費】'); });
+  var jigyohi = expenseList.filter(function(k){ return k.startsWith('【事業費】'); });
+  var hojohi  = expenseList.filter(function(k){ return k.startsWith('【補助】'); });
+  var sonota  = expenseList.filter(function(k){ return k.startsWith('【その他】'); });
+  var jimuTotal  = jimuhi.reduce(function(s,k){ return s+expTotals[k]; }, 0);
+  var jigyoTotal = jigyohi.reduce(function(s,k){ return s+expTotals[k]; }, 0);
+  var hojoTotal  = hojohi.reduce(function(s,k){ return s+expTotals[k]; }, 0);
+  var sonotaTotal = sonota.reduce(function(s,k){ return s+expTotals[k]; }, 0);
 
-  const totalInc = incomeList.reduce((s, k) => s + Math.max(0, yokoTotals[k] || 0), 0);
-  const totalExp = expenseList.reduce((s, k) => s + Math.abs(Math.min(0, yokoTotals[k] || 0)) + (yokoTotals[k] < 0 ? Math.abs(yokoTotals[k]) : 0), 0);
-
-  // 支出は負の値として格納されているので絶対値で表示
-  const expTotals = {};
-  expenseList.forEach(k => {
-    expTotals[k] = Math.abs(yokoTotals[k] || 0);
-  });
-  const totalExpCalc = expenseList.reduce((s, k) => s + expTotals[k], 0);
-  const balance = totalInc - totalExpCalc;
-
-  // セクション分け
-  const jimuhi = expenseList.filter(k => k.startsWith('【事務費】'));
-  const jigyohi = expenseList.filter(k => k.startsWith('【事業費】'));
-  const hojohi = expenseList.filter(k => k.startsWith('【補助】'));
-  const sonota = expenseList.filter(k => k.startsWith('【その他】'));
-
-  const jimuTotal = jimuhi.reduce((s, k) => s + expTotals[k], 0);
-  const jigyoTotal = jigyohi.reduce((s, k) => s + expTotals[k], 0);
-  const hojoTotal = hojohi.reduce((s, k) => s + expTotals[k], 0);
-  const sonotaTotal = sonota.reduce((s, k) => s + expTotals[k], 0);
-
-  const fmtRow = (label, val, indent) =>
-    `<tr><td style="padding:7px 12px;${indent?'padding-left:24px;':''}">${label}</td>
-     <td style="padding:7px 12px;text-align:right;color:${val>0?'var(--navy)':'var(--text2)'};">
-       ${val > 0 ? '¥' + val.toLocaleString() : '-'}</td></tr>`;
-
-  const subHeader = (label, total, color) =>
-    `<tr style="background:#e8eef5;">
-      <td style="padding:8px 12px;font-weight:700;color:${color||'var(--navy)'};">　${label}</td>
-      <td style="padding:8px 12px;text-align:right;font-weight:700;">¥${total.toLocaleString()}</td>
-    </tr>`;
-
-  let unmappedHtml = '';
+  var fmtRow = function(label, val, indent) {
+    return '<tr><td style="padding:7px 12px;' + (indent?'padding-left:24px;':'') + '">' + label + '</td>' +
+      '<td style="padding:7px 12px;text-align:right;color:' + (val>0?'var(--navy)':'var(--text2)') + ';">' + (val>0?'¥'+val.toLocaleString():'-') + '</td></tr>';
+  };
+  var subHeader = function(label, total, color) {
+    return '<tr style="background:#e8eef5;"><td style="padding:8px 12px;font-weight:700;color:' + (color||'var(--navy)') + ';">　' + label + '</td><td style="padding:8px 12px;text-align:right;font-weight:700;">¥' + total.toLocaleString() + '</td></tr>';
+  };
+  var unmappedHtml = '';
   if (unmapped.length > 0) {
-    unmappedHtml = `<div style="background:#fff8e8;border:2px solid var(--gold);border-radius:10px;padding:14px 16px;margin-top:16px;">
-      <div style="font-weight:700;color:#8a6020;margin-bottom:8px;">⚠️ 横浜市科目に未対応の科目があります</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:8px;">以下の科目は報告書に含まれていません。設定画面でマッピングを設定してください。</p>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${unmapped.map(s => `<span style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:13px;">${s}</span>`).join('')}
-      </div>
-    </div>`;
+    unmappedHtml = '<div style="background:#fff8e8;border:2px solid var(--gold);border-radius:10px;padding:14px 16px;margin-top:16px;"><div style="font-weight:700;color:#8a6020;margin-bottom:8px;">⚠️ 横浜市科目に未対応の科目があります</div><p style="font-size:13px;color:var(--text2);margin-bottom:8px;">以下の科目は報告書に含まれていません。設定画面でマッピングを設定してください。</p><div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+      unmapped.map(function(s){ return '<span style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:13px;">' + s + '</span>'; }).join('') +
+      '</div></div>';
   }
 
-  document.getElementById('reportContent').innerHTML = `
-    <div class="report-header">
-      <h2>${orgName}</h2>
-      <h2>${year}年度　決算報告書（横浜市形式）</h2>
-      <p>会計年度：${year}年4月1日 〜 ${+year+1}年3月31日</p>
-    </div>
-
-    <div class="report-section">
-      <h3>【収入の部】</h3>
-      <div class="ledger-table"><table class="report-table" style="width:100%">
-        <thead><tr><th>科目</th><th class="text-right">決算額</th></tr></thead>
-        <tbody>
-          ${incomeList.map(k => fmtRow(k, Math.max(0, yokoTotals[k]||0), true)).join('')}
-          <tr class="subtotal"><td><strong>収入合計</strong></td>
-            <td class="text-right amount-income"><strong>¥${totalInc.toLocaleString()}</strong></td></tr>
-        </tbody>
-      </table></div>
-    </div>
-
-    <div class="report-section">
-      <h3>【支出の部】</h3>
-      <div class="ledger-table"><table class="report-table" style="width:100%">
-        <thead><tr><th>科目</th><th class="text-right">決算額</th></tr></thead>
-        <tbody>
-          ${subHeader('事務費', jimuTotal)}
-          ${jimuhi.map(k => fmtRow(k.replace('【事務費】',''), expTotals[k], true)).join('')}
-          ${subHeader('事業費', jigyoTotal)}
-          ${jigyohi.map(k => fmtRow(k.replace('【事業費】',''), expTotals[k], true)).join('')}
-          ${subHeader('補助事業費', hojoTotal)}
-          ${hojohi.map(k => fmtRow(k.replace('【補助】',''), expTotals[k], true)).join('')}
-          ${subHeader('その他', sonotaTotal)}
-          ${sonota.map(k => fmtRow(k.replace('【その他】',''), expTotals[k], true)).join('')}
-          <tr class="subtotal"><td><strong>支出合計</strong></td>
-            <td class="text-right amount-expense"><strong>¥${totalExpCalc.toLocaleString()}</strong></td></tr>
-        </tbody>
-      </table></div>
-    </div>
-
-    <div class="ledger-table"><table class="report-table">
-      <tr class="total">
-        <td><strong>【収支差額】（収入合計 − 支出合計）</strong></td>
-        <td class="text-right"><strong>${balance<0?'△':''}¥${Math.abs(balance).toLocaleString()}</strong></td>
-      </tr>
-    </table></div>
-
-    ${unmappedHtml}
-
-    <div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">
-      以上のとおり${year}年度の会計を報告いたします。<br><br>
-      <div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px">
-        <span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
-        <span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span>
-      </div>
-    </div>`;
+  document.getElementById('reportContent').innerHTML =
+    '<div class="report-header"><h2>' + orgName + '</h2><h2>' + year + '年度　決算報告書（横浜市形式）</h2><p>会計年度：' + year + '年4月1日 〜 ' + (+year+1) + '年3月31日</p></div>' +
+    '<div class="report-section"><h3>【収入の部】</h3><div class="ledger-table"><table class="report-table" style="width:100%"><thead><tr><th>科目</th><th class="text-right">決算額</th></tr></thead><tbody>' +
+    incomeList.map(function(k){ return fmtRow(k, Math.max(0,yokoTotals[k]||0), true); }).join('') +
+    '<tr class="subtotal"><td><strong>収入合計</strong></td><td class="text-right amount-income"><strong>¥' + totalInc.toLocaleString() + '</strong></td></tr>' +
+    '</tbody></table></div></div>' +
+    '<div class="report-section"><h3>【支出の部】</h3><div class="ledger-table"><table class="report-table" style="width:100%"><thead><tr><th>科目</th><th class="text-right">決算額</th></tr></thead><tbody>' +
+    subHeader('事務費', jimuTotal) + jimuhi.map(function(k){ return fmtRow(k.replace('【事務費】',''), expTotals[k], true); }).join('') +
+    subHeader('事業費', jigyoTotal) + jigyohi.map(function(k){ return fmtRow(k.replace('【事業費】',''), expTotals[k], true); }).join('') +
+    subHeader('補助事業費', hojoTotal) + hojohi.map(function(k){ return fmtRow(k.replace('【補助】',''), expTotals[k], true); }).join('') +
+    subHeader('その他', sonotaTotal) + sonota.map(function(k){ return fmtRow(k.replace('【その他】',''), expTotals[k], true); }).join('') +
+    '<tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right amount-expense"><strong>¥' + totalExpCalc.toLocaleString() + '</strong></td></tr>' +
+    '</tbody></table></div></div>' +
+    '<div class="ledger-table"><table class="report-table"><tr class="total"><td><strong>【収支差額】（収入合計 − 支出合計）</strong></td><td class="text-right"><strong>' + (balance<0?'△':'') + '¥' + Math.abs(balance).toLocaleString() + '</strong></td></tr></table></div>' +
+    unmappedHtml +
+    '<div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">以上のとおり' + year + '年度の会計を報告いたします。<br><br><div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px"><span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span><span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span></div></div>';
 }
 
 // ============================
 //   CSV IMPORT
 // ============================
 function importCSV(input) {
-  const file = input.files[0];
+  var file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const text = e.target.result.replace(/^\uFEFF/, '');
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-      if (lines.length < 2) { showImportResult('error', 'データが見つかりませんでした。'); return; }
+      var text  = e.target.result.replace(/^\uFEFF/, '');
+      var lines = text.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l; });
+      if (lines.length < 2) { showImportResult('error','データが見つかりませんでした。'); return; }
+      var header   = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+      var required = ['日付','摘要','勘定科目','収入','支出','決済方法'];
+      var missing  = required.filter(function(r){ return !header.includes(r); });
+      if (missing.length > 0) { showImportResult('error','CSVの形式が正しくありません。\n不足列：' + missing.join('、')); return; }
 
-      const header = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-      const required = ['日付','摘要','勘定科目','収入','支出','決済方法'];
-      const missing = required.filter(r => !header.includes(r));
-      if (missing.length > 0) {
-        showImportResult('error', 'CSVの形式が正しくありません。\n不足列：' + missing.join('、'));
-        return;
-      }
-
-      const idx = {
-        date:      header.indexOf('日付'),
-        desc:      header.indexOf('摘要'),
-        subject:   header.indexOf('勘定科目'),
-        voucherNo: header.indexOf('伝票番号'),
-        income:    header.indexOf('収入'),
-        expense:   header.indexOf('支出'),
-        payment:   header.indexOf('決済方法'),
+      var idx = {
+        date: header.indexOf('日付'), desc: header.indexOf('摘要'),
+        subject: header.indexOf('勘定科目'), voucherNo: header.indexOf('伝票番号'),
+        income: header.indexOf('収入'), expense: header.indexOf('支出'),
+        payment: header.indexOf('決済方法')
       };
 
-      const existing = getEntries();
-      const existingKeys = new Set(existing.map(e => e.date+'_'+e.desc+'_'+e.amount+'_'+e.type));
-
-      let added = 0, skipped = 0, errors = 0;
-      const newEntries = [];
+      var existing    = getEntries();
+      var existingKeys = new Set(existing.map(function(e){ return e.date+'_'+e.desc+'_'+e.amount+'_'+e.type; }));
+      var added = 0, skipped = 0, errors = 0;
+      var newEntries = [];
 
       lines.slice(1).forEach(function(line) {
         if (!line.trim()) return;
-        // CSV列パース（ダブルクォート対応）
-        const cols = [];
-        let cur = '', inQ = false;
-        for (let c of line) {
-          if (c === '"') { inQ = !inQ; }
-          else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
-          else { cur += c; }
+        var cols = [], cur = '', inQ = false;
+        for (var i=0; i<line.length; i++) {
+          var c = line[i];
+          if (c==='"') { inQ=!inQ; }
+          else if (c===',' && !inQ) { cols.push(cur); cur=''; }
+          else { cur+=c; }
         }
         cols.push(cur);
+        var get = function(i){ return (cols[i]||'').replace(/"/g,'').trim(); };
 
-        const get = function(i) { return (cols[i] || '').replace(/"/g, '').trim(); };
-
-        const date       = get(idx.date);
-        const desc       = get(idx.desc);
-        const subject    = get(idx.subject);
-        const voucherNo  = get(idx.voucherNo);
-        const incomeStr  = get(idx.income);
-        const expenseStr = get(idx.expense);
-        const paymentStr = get(idx.payment);
+        var date       = get(idx.date);
+        var desc       = get(idx.desc);
+        var subject    = get(idx.subject);
+        var voucherNo  = get(idx.voucherNo);
+        var incomeStr  = get(idx.income);
+        var expenseStr = get(idx.expense);
+        var paymentStr = get(idx.payment);
 
         if (!date || !/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(date)) { errors++; return; }
-        const normalizedDate = date.replace(/\//g, '-');
+        var normalizedDate = date.replace(/\//g,'-');
+        var incomeAmt  = parseInt((incomeStr ||'').replace(/,/g,'')) || 0;
+        var expenseAmt = parseInt((expenseStr||'').replace(/,/g,'')) || 0;
+        if (incomeAmt===0 && expenseAmt===0) { errors++; return; }
 
-        const incomeAmt  = parseInt((incomeStr  || '').replace(/,/g,'')) || 0;
-        const expenseAmt = parseInt((expenseStr || '').replace(/,/g,'')) || 0;
-        if (incomeAmt === 0 && expenseAmt === 0) { errors++; return; }
-
-        const type    = incomeAmt > 0 ? 'income' : 'expense';
-        const amount  = incomeAmt > 0 ? incomeAmt : expenseAmt;
-        const payment = paymentStr === '銀行口座' ? 'bank' : 'cash';
-
-        const key = normalizedDate + '_' + desc + '_' + amount + '_' + type;
+        var type    = incomeAmt > 0 ? 'income' : 'expense';
+        var amount  = incomeAmt > 0 ? incomeAmt : expenseAmt;
+        var payment = paymentStr === '銀行口座' ? 'bank' : 'cash';
+        var key     = normalizedDate + '_' + desc + '_' + amount + '_' + type;
         if (existingKeys.has(key)) { skipped++; return; }
-
         existingKeys.add(key);
-        newEntries.push({
-          id: Date.now() + Math.random(),
-          date: normalizedDate,
-          desc: desc,
-          subject: subject || 'その他',
-          voucherNo: voucherNo,
-          type: type,
-          amount: amount,
-          payment: payment
-        });
+        newEntries.push({ id: Date.now() + Math.random(), date: normalizedDate, desc: desc,
+          subject: subject||'その他', voucherNo: voucherNo, type: type, amount: amount, payment: payment });
         added++;
       });
 
-      // 修正後
       if (newEntries.length > 0) {
-         allData[currentOrg].entries = [...getEntries(), ...newEntries];
-         saveAll();  // ← saveAll()に変更
-         renderLedger();
+        allData[currentOrg].entries = getEntries().concat(newEntries);
+        saveAll();
+        renderLedger();
       }
-
       if (added > 0) {
-        const msg = '✅ インポート完了！\n新規追加：' + added + '件' +
-          (skipped > 0 ? '　重複スキップ：' + skipped + '件' : '') +
-          (errors  > 0 ? '　読込エラー：'  + errors  + '件' : '');
-        showImportResult('success', msg);
+        showImportResult('success','✅ インポート完了！\n新規追加：'+added+'件'+(skipped>0?'　重複スキップ：'+skipped+'件':'')+(errors>0?'　読込エラー：'+errors+'件':''));
         showToast('✅ ' + added + '件をインポートしました');
       } else if (skipped > 0) {
-        showImportResult('warn', '⚠️ すべて重複データのためスキップしました（' + skipped + '件）');
+        showImportResult('warn','⚠️ すべて重複データのためスキップしました（'+skipped+'件）');
       } else {
-        showImportResult('error', '❌ インポートできるデータがありませんでした。' +
-          (errors > 0 ? '（エラー：' + errors + '件）' : ''));
+        showImportResult('error','❌ インポートできるデータがありませんでした。'+(errors>0?'（エラー：'+errors+'件）':''));
       }
-
     } catch(err) {
-      showImportResult('error', 'CSVの読み込みに失敗しました。ファイルを確認してください。');
+      showImportResult('error','CSVの読み込みに失敗しました。ファイルを確認してください。');
     }
     input.value = '';
   };
-  reader.readAsText(file, 'UTF-8');
+  reader.readAsText(file,'UTF-8');
 }
 
 function showImportResult(type, msg) {
-  const el = document.getElementById('importResult');
+  var el = document.getElementById('importResult');
   if (!el) return;
-  const colors  = { success: '#1e7b4e', warn: '#8a6020', error: '#c0392b' };
-  const bgs     = { success: '#e8f5ef', warn: '#fdf8e8', error: '#fdf0ee' };
-  const borders = { success: '#1e7b4e', warn: '#c8a84b', error: '#c0392b' };
-  el.innerHTML  = '<div style="padding:10px 14px;border-radius:8px;border:1.5px solid ' +
-    borders[type] + ';background:' + bgs[type] + ';color:' + colors[type] +
-    ';white-space:pre-line;line-height:1.7;">' + msg + '</div>';
+  var colors  = { success:'#1e7b4e', warn:'#8a6020', error:'#c0392b' };
+  var bgs     = { success:'#e8f5ef', warn:'#fdf8e8', error:'#fdf0ee' };
+  var borders = { success:'#1e7b4e', warn:'#c8a84b', error:'#c0392b' };
+  el.innerHTML = '<div style="padding:10px 14px;border-radius:8px;border:1.5px solid '+borders[type]+';background:'+bgs[type]+';color:'+colors[type]+';white-space:pre-line;line-height:1.7;">'+msg+'</div>';
 }
 
 // ============================
 //   CSV EXPORT
 // ============================
 function exportCSV() {
-  const year = document.getElementById('filterYear')?.value;
-  let entries = getEntries();
-  if (year) entries = entries.filter(e => getFiscalYear(e.date) == year);
-  entries.sort((a,b) => a.date.localeCompare(b.date));
-
-  const header = ['日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別'];
-  const rows = entries.map(e => [
+  var year = document.getElementById('filterYear') && document.getElementById('filterYear').value;
+  var entries = getEntries();
+  if (year) entries = entries.filter(function(e){ return getFiscalYear(e.date) == year; });
+  entries.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var header = ['日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別'];
+  var rows = entries.map(function(e){ return [
     e.date, e.desc, e.subject, e.voucherNo||'',
-    e.type==='income'?e.amount:'',
-    e.type==='expense'?e.amount:'',
-    e.payment==='bank'?'銀行口座':'現金',
-    e.type==='income'?'収入':'支出'
-  ]);
-  const csv = [header, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `会計データ_${year||'全期間'}.csv`;
+    e.type==='income'?e.amount:'', e.type==='expense'?e.amount:'',
+    e.payment==='bank'?'銀行口座':'現金', e.type==='income'?'収入':'支出'
+  ]; });
+  var csv  = [header].concat(rows).map(function(r){ return r.map(function(c){ return '"'+c+'"'; }).join(','); }).join('\n');
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  var a    = document.createElement('a');
+  a.href   = URL.createObjectURL(blob);
+  a.download = '会計データ_' + (year||'全期間') + '.csv';
   a.click();
   showToast('CSVをダウンロードしました');
 }
@@ -1677,12 +1442,12 @@ function exportCSV() {
 // ============================
 //   MODAL HELPERS
 // ============================
-let confirmCallback = null;
+var confirmCallback = null;
 
 function showConfirmModal(msg, onOk, okLabel, okColor) {
   confirmCallback = onOk;
   document.getElementById('confirmMsg').textContent = msg;
-  const okBtn = document.getElementById('confirmOkBtn');
+  var okBtn = document.getElementById('confirmOkBtn');
   okBtn.textContent = okLabel || '削除する';
   okBtn.style.background = okColor || '#c0392b';
   document.getElementById('confirmModal').style.display = 'flex';
@@ -1692,24 +1457,24 @@ function closeConfirmModal() {
   confirmCallback = null;
 }
 function doConfirmOk() {
-  const cb = confirmCallback;
+  var cb = confirmCallback;
   closeConfirmModal();
   if (cb) cb();
 }
 
 // ===== SETTINGS PASSWORD GATE =====
-let settingsUnlocked = false;
+var settingsUnlocked = false;
 function showSection(name) {
   if (name === 'settings' && !settingsUnlocked) {
     document.getElementById('settingsPwInput').value = '';
     document.getElementById('settingsPwModal').style.display = 'flex';
-    setTimeout(() => document.getElementById('settingsPwInput').focus(), 100);
+    setTimeout(function(){ document.getElementById('settingsPwInput').focus(); }, 100);
     return;
   }
   _doShowSection(name);
 }
 function checkSettingsPassword() {
-  const pw = document.getElementById('settingsPwInput').value;
+  var pw = document.getElementById('settingsPwInput').value;
   if (pw === allData[currentOrg].password) {
     settingsUnlocked = true;
     closeSettingsPwModal();
@@ -1725,30 +1490,28 @@ function closeSettingsPwModal() {
   document.getElementById('settingsPwModal').style.display = 'none';
 }
 function _doShowSection(name) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('section-' + name).classList.add('active');
-  // find and activate correct nav button
-  document.querySelectorAll('.nav-btn').forEach(b => {
+  document.querySelectorAll('.nav-btn').forEach(function(b) {
     if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+name+"'")) b.classList.add('active');
   });
-  if (name === 'ledger') renderLedger();
-  if (name === 'monthly') renderMonthly();
-  if (name === 'subject') renderSubject();
-  if (name === 'report') renderReport();
-  if (name === 'settings') { renderSubjectSettings(); renderMappingSettings(); }
-  // lock settings again when leaving
-  if (name !== 'settings') settingsUnlocked = false;
+  if (name === 'ledger')    renderLedger();
+  if (name === 'monthly')   renderMonthly();
+  if (name === 'subject')   renderSubject();
+  if (name === 'report')    renderReport();
+  if (name === 'settings')  { renderSubjectSettings(); renderMappingSettings(); }
+  if (name !== 'settings')  settingsUnlocked = false;
 }
 
 // ============================
 //   TOAST
 // ============================
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 </script>
 </body>
