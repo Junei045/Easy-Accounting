@@ -291,6 +291,19 @@
   .btn-export.print { border-color: var(--text2); color: var(--text2); }
   .btn-export.print:hover { background: var(--text2); color: white; }
 
+  /* ===== VOICE INPUT ===== */
+  #micBtn.recording {
+    background: #fde8e8;
+    border-color: var(--red);
+    color: var(--red);
+    animation: micPulse 1s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(192,57,43,0); }
+  }
+  #micBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
   /* EMPTY STATE */
   .empty-state {
     text-align: center; padding: 48px 16px;
@@ -380,7 +393,20 @@
 
         <div class="form-row">
           <label>摘要（内容）</label>
-          <input type="text" id="entryDesc" placeholder="例：4月分会費、〇〇修繕費">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="entryDesc" placeholder="例：4月分会費、〇〇修繕費" style="flex:1;">
+            <button type="button" id="micBtn" onclick="toggleVoiceInput()"
+              title="音声入力（押して話しかけてください）"
+              style="flex-shrink:0;width:46px;height:46px;border-radius:50%;border:2px solid var(--border);
+                     background:var(--bg);color:var(--text2);font-size:20px;cursor:pointer;
+                     display:flex;align-items:center;justify-content:center;
+                     transition:all 0.2s;position:relative;">
+              🎤
+            </button>
+          </div>
+          <div id="voiceStatus" style="display:none;margin-top:6px;padding:7px 12px;border-radius:8px;
+               font-size:13px;background:#e8f0f8;color:var(--navy);border:1px solid #b0c8e8;">
+          </div>
         </div>
 
         <div class="form-row">
@@ -388,14 +414,14 @@
           <select id="entrySubject">
             <option value="">-- 選択してください --</option>
             <optgroup label="収入科目">
-              <option value="前年度繰越金">前年度繰越金</option>
               <option value="会費">会費</option>
               <option value="補助金">補助金</option>
               <option value="助成金">助成金</option>
               <option value="寄付金">寄付金</option>
               <option value="事業収入">事業収入</option>
               <option value="受取利息">受取利息</option>
-              <option value="雑収入">雑収入</option>              
+              <option value="雑収入">雑収入</option>
+              <option value="前年度繰越金">前年度繰越金</option>
             </optgroup>
             <optgroup label="支出科目">
               <option value="消耗品費">消耗品費</option>
@@ -699,13 +725,137 @@ function checkSubmitRate(formId, threshold, windowMs) {
   return true;
 }
 // ============================================================
+// 🎤 音声入力（Web Speech API）
+// Chrome / Edge で動作。Safari・オフライン環境では利用不可。
+// ============================================================
+
+var _recognition = null;
+var _isRecording = false;
+
+function toggleVoiceInput() {
+  if (_isRecording) {
+    stopVoiceInput();
+  } else {
+    startVoiceInput();
+  }
+}
+
+function startVoiceInput() {
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showVoiceStatus('error', '⚠️ このブラウザは音声入力に対応していません。Chrome または Edge をお使いください。');
+    return;
+  }
+
+  _recognition = new SpeechRecognition();
+  _recognition.lang = 'ja-JP';
+  _recognition.interimResults = true;  // 認識中の仮テキストも表示
+  _recognition.maxAlternatives = 1;
+  _recognition.continuous = false;
+
+  _recognition.onstart = function() {
+    _isRecording = true;
+    var btn = document.getElementById('micBtn');
+    btn.classList.add('recording');
+    btn.title = 'タップして停止';
+    showVoiceStatus('recording', '🔴 録音中… 話しかけてください');
+  };
+
+  _recognition.onresult = function(event) {
+    var interim = '';
+    var final   = '';
+    for (var i = event.resultIndex; i < event.results.length; i++) {
+      var t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) { final += t; }
+      else { interim += t; }
+    }
+    if (final) {
+      // 確定テキストを摘要欄に反映（既存テキストがあれば末尾に追記）
+      var inp = document.getElementById('entryDesc');
+      var cur = inp.value.trim();
+      inp.value = cur ? cur + final : final;
+      showVoiceStatus('success', '✅ 認識結果：「' + inp.value + '」');
+    } else if (interim) {
+      showVoiceStatus('recording', '🔴 認識中… ' + interim);
+    }
+  };
+
+  _recognition.onerror = function(event) {
+    _isRecording = false;
+    resetMicBtn();
+    var messages = {
+      'not-allowed'  : '⚠️ マイクの使用が許可されていません。ブラウザの設定を確認してください。',
+      'no-speech'    : '⚠️ 音声が検出されませんでした。もう一度お試しください。',
+      'network'      : '⚠️ ネットワークエラーです。インターネット接続を確認してください。',
+      'aborted'      : ''  // 手動停止のためメッセージ不要
+    };
+    var msg = messages[event.error] || ('⚠️ エラーが発生しました：' + event.error);
+    if (msg) showVoiceStatus('error', msg);
+    else     hideVoiceStatus();
+  };
+
+  _recognition.onend = function() {
+    _isRecording = false;
+    resetMicBtn();
+    // successメッセージが出ていれば3秒後に消す
+    var st = document.getElementById('voiceStatus');
+    if (st && st.dataset.state === 'success') {
+      setTimeout(hideVoiceStatus, 3000);
+    }
+  };
+
+  try {
+    _recognition.start();
+  } catch(e) {
+    showVoiceStatus('error', '⚠️ 音声入力を開始できませんでした。');
+    resetMicBtn();
+  }
+}
+
+function stopVoiceInput() {
+  if (_recognition) {
+    try { _recognition.stop(); } catch(e) {}
+  }
+  _isRecording = false;
+  resetMicBtn();
+}
+
+function resetMicBtn() {
+  var btn = document.getElementById('micBtn');
+  if (!btn) return;
+  btn.classList.remove('recording');
+  btn.title = '音声入力（押して話しかけてください）';
+}
+
+function showVoiceStatus(state, msg) {
+  var el = document.getElementById('voiceStatus');
+  if (!el) return;
+  var styles = {
+    recording : { bg:'#fde8e8', color:'var(--red)',   border:'#f0a0a0' },
+    success   : { bg:'#e8f5ef', color:'var(--green)', border:'#90d0a8' },
+    error     : { bg:'#fff8e8', color:'#8a6020',      border:'var(--gold)' }
+  };
+  var s = styles[state] || styles.error;
+  el.style.display  = 'block';
+  el.style.background   = s.bg;
+  el.style.color        = s.color;
+  el.style.borderColor  = s.border;
+  el.textContent    = msg;
+  el.dataset.state  = state;
+}
+
+function hideVoiceStatus() {
+  var el = document.getElementById('voiceStatus');
+  if (el) el.style.display = 'none';
+}
+// ============================================================
 
 // ============================
 //   SUBJECTS
 // ============================
 var DEFAULT_SUBJECTS = {
   income: ['前年度繰越金','会費','補助金','助成金','寄付金','事業収入','受取利息','雑収入'],
-  expense: ['消耗品費','備品費','印刷費','通信費','旅費交通費','水光熱費','修繕費','総会費','会議費','諸会議費','区スポーツ協会費','区更生保護協会費','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','助成金交付','その他事業費','慶弔費','交際費','助成金戻入金','保険料','雑費','予備費','次年度繰越金','積立金']
+  expense: ['消耗品費','備品費','印刷費','通信費','旅費交通費','水光熱費','修繕費','総会費','会議費','諸会議費','区スポーツ協会費','区更生保護','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','助成金','その他事業費','慶弔費','交際費','助成金戻入金','保険料','雑費','予備費','次年度繰越','積立金']
 };
 
 function getSubjects() {
