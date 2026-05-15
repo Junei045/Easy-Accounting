@@ -388,27 +388,44 @@
           <select id="entrySubject">
             <option value="">-- 選択してください --</option>
             <optgroup label="収入科目">
+              <option value="前年度繰越金">前年度繰越金</option>
               <option value="会費">会費</option>
-              <option value="補助金・助成金">補助金・助成金</option>
+              <option value="補助金">補助金</option>
+              <option value="助成金">助成金</option>
               <option value="寄付金">寄付金</option>
               <option value="事業収入">事業収入</option>
-              <option value="雑収入">雑収入</option>
-              <option value="繰越金">繰越金</option>
+              <option value="受取利息">受取利息</option>
+              <option value="雑収入">雑収入</option>              
             </optgroup>
             <optgroup label="支出科目">
-              <option value="会議費">会議費</option>
-              <option value="通信費">通信費</option>
-              <option value="印刷費">印刷費</option>
               <option value="消耗品費">消耗品費</option>
-              <option value="修繕費">修繕費</option>
-              <option value="清掃費">清掃費</option>
               <option value="備品費">備品費</option>
-              <option value="行事費">行事費</option>
+              <option value="印刷費">印刷費</option>
+              <option value="通信費">通信費</option>
+              <option value="旅費交通費">旅費交通費</option>
+              <option value="水光熱費">水光熱費</option>
+              <option value="修繕費">修繕費</option>
+              <option value="総会費">総会費</option>
+              <option value="会議費">会議費</option>
+              <option value="諸会議費">諸会議費</option>
+              <option value="区スポーツ協会費">区スポーツ協会費</option>
+              <option value="区更生保護協会費">区更生保護協会費</option>
+              <option value="栄防犯協会費">栄防犯協会費</option>
+              <option value="その他会費分担金">その他会費分担金</option>   
+              <option value="総務部費">総務部費</option>              
+              <option value="役員活動費">役員活動費</option>
+              <option value="福祉厚生部費">福祉厚生部費</option>
+              <option value="防犯防災部費">防犯防災部費</option>
+              <option value="助成金">助成金</option>
+              <option value="その他事業費">その他事業費</option>
               <option value="慶弔費">慶弔費</option>
-              <option value="交通費">交通費</option>
+              <option value="交際費">交際費</option>
+              <option value="助成金戻入金">助成金戻入金</option>
               <option value="保険料">保険料</option>
-              <option value="光熱費">光熱費</option>
               <option value="雑費">雑費</option>
+              <option value="予備費">予備費</option>
+              <option value="次年度繰越金">次年度繰越金</option>
+              <option value="積立金">積立金</option>
             </optgroup>
           </select>
         </div>
@@ -687,8 +704,8 @@ function checkSubmitRate(formId, threshold, windowMs) {
 //   SUBJECTS
 // ============================
 var DEFAULT_SUBJECTS = {
-  income: ['会費','補助金・助成金','寄付金','事業収入','雑収入','繰越金'],
-  expense: ['会議費','通信費','印刷費','消耗品費','修繕費','清掃費','備品費','行事費','慶弔費','交通費','保険料','光熱費','雑費']
+  income: ['前年度繰越金','会費','補助金','助成金','寄付金','事業収入','受取利息','雑収入'],
+  expense: ['消耗品費','備品費','印刷費','通信費','旅費交通費','水光熱費','修繕費','総会費','会議費','諸会議費','区スポーツ協会費','区更生保護協会費','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','助成金交付','その他事業費','慶弔費','交際費','助成金戻入金','保険料','雑費','予備費','次年度繰越金','積立金']
 };
 
 function getSubjects() {
