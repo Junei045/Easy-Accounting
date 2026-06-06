@@ -420,12 +420,10 @@ async function readReceipts() {
     }
     contentParts.push({type:'text',text:`添付された領収書から出納帳データを抽出してください。${catInst}\n以下のJSON形式のみで返してください。余分なテキスト不要。\n{"entries":[{"date":"YYYY-MM-DD","description":"摘要","income":収入金額または0,"expense":支出金額または0,"category":"勘定科目"}]}\n・金額は数値のみ（カンマなし）\n・通常の領収書は支出\n・日付不明は今日の日付\n・複数枚すべて抽出`});
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://anthropic-proxy.sakae-toyodarengou-18c.workers.dev', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
