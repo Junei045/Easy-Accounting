@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>金銭出納帳</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --green: #2D6A4F;
+    --green-light: #E8F4EE;
+    --green-mid: #52B788;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --border: #e0e0e0;
+    --bg: #f7f8f5;
+    --white: #ffffff;
+    --red: #c0392b;
+    --red-light: #fdf0ee;
+    --blue: #1a6fa8;
+    --blue-light: #e8f2fb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+  header { background: var(--green); color: white; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  header h1 { font-size: 17px; font-weight: 600; letter-spacing: 0.05em; }
+  header .header-sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+  .api-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .container { max-width: 680px; margin: 0 auto; padding: 12px; }
+
+  /* APIキー設定モーダル */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 420px; }
+  .modal h2 { font-size: 16px; margin-bottom: 8px; color: var(--green); }
+  .modal p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
+  .modal input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; font-family: monospace; }
+  .modal input:focus { outline: none; border-color: var(--green); }
+  .modal-btns { display: flex; gap: 8px; }
+
+  /* カード */
+  .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 12px; }
+  .card-title { font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* 設定 */
+  .setting-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .setting-row label { font-size: 13px; color: var(--text-secondary); min-width: 72px; }
+  .setting-row input, .setting-row select { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; }
+  .setting-row input:focus, .setting-row select:focus { outline: none; border-color: var(--green); }
+
+  /* アップロード */
+  .upload-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .upload-btn { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 16px 8px; border: 1.5px dashed var(--border); border-radius: 10px; cursor: pointer; background: var(--bg); transition: all .15s; }
+  .upload-btn:hover { border-color: var(--green-mid); background: var(--green-light); }
+  .upload-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-btn svg { width: 28px; height: 28px; color: var(--green); }
+  .upload-btn span { font-size: 13px; font-weight: 500; color: var(--text); }
+  .upload-btn small { font-size: 11px; color: var(--text-secondary); }
+  .preview-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .preview-img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+  .preview-file { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 11px; color: var(--text-secondary); text-align: center; }
+  .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ステータス */
+  .status { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; display: none; }
+  .status.info { background: var(--blue-light); color: var(--blue); display: block; }
+  .status.success { background: var(--green-light); color: var(--green); display: block; }
+  .status.error { background: var(--red-light); color: var(--red); display: block; }
+
+  /* サマリー */
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  @media(min-width: 420px) { .summary-grid { grid-template-columns: repeat(4, 1fr); } }
+  .metric { background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+  .metric-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+  .metric-value { font-size: 16px; font-weight: 600; color: var(--text); }
+  .metric-value.income { color: #1a7a4a; }
+  .metric-value.expense { color: var(--red); }
+
+  /* テーブル */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
+  th { background: var(--bg); padding: 8px 6px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; color: var(--text-secondary); font-size: 11px; }
+  td { padding: 6px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  tr:hover td { background: #fafff8; }
+  .editable { border: none; background: transparent; font-family: inherit; font-size: 12px; color: var(--text); width: 100%; padding: 2px 3px; border-radius: 4px; }
+  .editable:focus { outline: none; background: #f0f8f0; }
+  .badge { font-size: 9px; padding: 2px 5px; border-radius: 8px; white-space: nowrap; display: inline-block; margin-bottom: 2px; }
+  .badge-ai { background: var(--blue-light); color: var(--blue); }
+  .badge-manual { background: var(--bg); color: var(--text-secondary); }
+  .amount-in { color: #1a7a4a; text-align: right; }
+  .amount-out { color: var(--red); text-align: right; }
+  .balance-cell { text-align: right; color: var(--text); white-space: nowrap; }
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--text-secondary); font-size: 13px; }
+  .empty-state svg { width: 40px; height: 40px; margin-bottom: 10px; opacity: .4; display: block; margin-left: auto; margin-right: auto; }
+
+  /* ボタン */
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 13px; color: var(--text); font-family: inherit; transition: all .15s; }
+  .btn:hover { background: var(--bg); }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--green); color: white; border-color: var(--green); }
+  .btn-primary:hover { background: #245c42; }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+  .btn-danger { color: var(--red); border-color: #f5c0bb; }
+  .btn-danger:hover { background: var(--red-light); }
+  .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .no-api-warning { background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #856404; margin-bottom: 12px; display: none; }
+  .no-api-warning.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-sub">豊田連合町内会</div>
+    <h1>金銭出納帳</h1>
+  </div>
+  <button class="api-btn" onclick="showApiModal()">APIキー設定</button>
+</header>
+
+<!-- APIキー設定モーダル -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <h2>🔑 APIキーの設定</h2>
+    <p>AnthropicのAPIキー（sk-ant-で始まる文字列）を入力してください。キーはこの端末のブラウザに保存され、サーバーには送信されません。</p>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." />
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1">保存</button>
+      <button class="btn" onclick="closeApiModal()" style="flex:1">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="no-api-warning" id="no-api-warning">
+    ⚠️ APIキーが設定されていません。右上の「APIキー設定」からキーを入力してください。
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <!-- 基本設定 -->
+  <div class="card">
+    <div class="card-title">基本設定</div>
+    <div class="setting-row">
+      <label>繰越残高</label>
+      <input type="number" id="carry-input" placeholder="例: 150000" style="max-width:160px" />
+      <span style="font-size:13px;color:var(--text-secondary)">円</span>
+      <button class="btn btn-sm" onclick="setCarry()">設定</button>
+    </div>
+    <div class="setting-row">
+      <label>勘定科目</label>
+      <select id="category-mode">
+        <option value="ai">AIが自動推測（後から修正可）</option>
+        <option value="manual">手入力のみ</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 領収書追加 -->
+  <div class="card">
+    <div class="card-title">領収書を追加</div>
+    <div class="upload-btns">
+      <label class="upload-btn">
+        <input type="file" id="file-gallery" accept="image/*,application/pdf" multiple onchange="handleFiles(this.files)" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <span>ファイルを選択</span>
+        <small>写真・PDF（複数可）</small>
+      </label>
+      <label class="upload-btn">
+        <input type="file" id="file-camera" accept="image/*" capture="environment" onchange="handleFiles(this.files)" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        <span>カメラで撮影</span>
+        <small>スマホのカメラを起動</small>
+      </label>
+    </div>
+    <div id="preview-grid" class="preview-grid"></div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="read-btn" onclick="readReceipts()" style="display:none">
+        <span>✨</span> AIで読み取って追記
+      </button>
+      <button class="btn btn-sm" id="clear-btn" onclick="clearFiles()" style="display:none">✕ クリア</button>
+    </div>
+  </div>
+
+  <!-- 出納帳 -->
+  <div class="card">
+    <div class="card-title">金銭出納帳</div>
+    <div class="summary-grid">
+      <div class="metric"><div class="metric-label">繰越残高</div><div class="metric-value" id="m-carry">—</div></div>
+      <div class="metric"><div class="metric-label">収入合計</div><div class="metric-value income" id="m-income">¥0</div></div>
+      <div class="metric"><div class="metric-label">支出合計</div><div class="metric-value expense" id="m-expense">¥0</div></div>
+      <div class="metric"><div class="metric-label">現在残高</div><div class="metric-value" id="m-balance">—</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:82px">年月日</th>
+            <th style="width:52px">伝票No</th>
+            <th style="width:88px">勘定科目</th>
+            <th>摘要</th>
+            <th style="width:76px">収入</th>
+            <th style="width:76px">支出</th>
+            <th style="width:76px">残高</th>
+            <th style="width:32px"></th>
+          </tr>
+        </thead>
+        <tbody id="ledger-body"></tbody>
+      </table>
+    </div>
+    <div id="empty-state" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      まだ明細がありません
+    </div>
+    <div class="action-row" style="margin-top:12px">
+      <button class="btn" onclick="addManualRow()">＋ 手動で追加</button>
+      <button class="btn" onclick="exportExcel()">↓ Excelダウンロード</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 全削除</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'cashbook_v3';
+const API_KEY_STORAGE = 'cashbook_api_key';
+let ledger = [];
+let carryOver = 0;
+let pendingFiles = [];
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const d = JSON.parse(s);
+      ledger = d.ledger || [];
+      carryOver = d.carryOver || 0;
+      document.getElementById('carry-input').value = carryOver || '';
+    }
+  } catch(e) {}
+  checkApiKey();
+  render();
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ledger, carryOver})); } catch(e) {}
+}
+
+function getApiKey() {
+  return localStorage.getItem(API_KEY_STORAGE) || '';
+}
+
+function checkApiKey() {
+  const warning = document.getElementById('no-api-warning');
+  if (!getApiKey()) {
+    warning.classList.add('show');
+  } else {
+    warning.classList.remove('show');
+  }
+}
+
+function showApiModal() {
+  const key = getApiKey();
+  if (key) document.getElementById('api-key-input').value = key;
+  document.getElementById('api-modal').classList.add('show');
+}
+
+function closeApiModal() {
+  document.getElementById('api-modal').classList.remove('show');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    alert('APIキーは sk-ant- で始まる文字列です。確認してください。');
+    return;
+  }
+  localStorage.setItem(API_KEY_STORAGE, key);
+  closeApiModal();
+  checkApiKey();
+  showStatus('APIキーを保存しました', 'success');
+}
+
+function setCarry() {
+  const v = parseInt(document.getElementById('carry-input').value) || 0;
+  carryOver = v;
+  save(); render();
+  showStatus('繰越残高を設定しました', 'success');
+}
+
+function fmt(n) {
+  if (n === null || n === undefined || n === '') return '';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+
+function calcBalances() {
+  let bal = carryOver;
+  return ledger.map(r => { bal += (r.income||0) - (r.expense||0); return bal; });
+}
+
+function render() {
+  const balances = calcBalances();
+  const tbody = document.getElementById('ledger-body');
+  const empty = document.getElementById('empty-state');
+  tbody.innerHTML = '';
+  empty.style.display = ledger.length === 0 ? 'block' : 'none';
+
+  ledger.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    const badge = row.aiGenerated
+      ? '<span class="badge badge-ai">AI</span>'
+      : '<span class="badge badge-manual">手動</span>';
+    tr.innerHTML = `
+      <td><input class="editable" value="${row.date||''}" onchange="updateField(${i},'date',this.value)" style="width:78px" /></td>
+      <td><input class="editable" value="${row.slipNo||''}" onchange="updateField(${i},'slipNo',this.value)" style="width:46px" /></td>
+      <td><div style="display:flex;flex-direction:column;gap:2px">${badge}<input class="editable" value="${escHtml(row.category||'')}" onchange="updateField(${i},'category',this.value)" placeholder="科目" style="width:82px" /></div></td>
+      <td><input class="editable" value="${escHtml(row.description||'')}" onchange="updateField(${i},'description',this.value)" style="width:100%;min-width:90px" /></td>
+      <td class="amount-in"><input class="editable amount-in" value="${row.income||''}" onchange="updateField(${i},'income',this.value?parseInt(this.value.replace(/,/g,'')):null)" style="width:70px;text-align:right" /></td>
+      <td class="amount-out"><input class="editable amount-out" value="${row.expense||''}" onchange="updateField(${i},'expense',this.value?parseInt(this.value.replace(/,/g,'')):null)" style="width:70px;text-align:right" /></td>
+      <td class="balance-cell" style="font-size:11px">${fmt(balances[i])}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteRow(${i})" style="padding:4px 6px">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalIncome = ledger.reduce((s,r)=>s+(r.income||0), 0);
+  const totalExpense = ledger.reduce((s,r)=>s+(r.expense||0), 0);
+  document.getElementById('m-carry').textContent = carryOver ? fmt(carryOver) : '未設定';
+  document.getElementById('m-income').textContent = fmt(totalIncome);
+  document.getElementById('m-expense').textContent = fmt(totalExpense);
+  document.getElementById('m-balance').textContent = (carryOver||ledger.length) ? fmt(carryOver+totalIncome-totalExpense) : '—';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function updateField(i, field, val) {
+  ledger[i][field] = val;
+  ledger[i].aiGenerated = false;
+  save(); render();
+}
+
+function deleteRow(i) { ledger.splice(i,1); save(); render(); }
+
+function addManualRow() {
+  ledger.push({date:'',slipNo:'',category:'',description:'',income:null,expense:null,aiGenerated:false});
+  save(); render();
+}
+
+function handleFiles(files) {
+  if (!files.length) return;
+  Array.from(files).forEach(f => {
+    if (!pendingFiles.find(p=>p.name===f.name&&p.size===f.size)) pendingFiles.push(f);
+  });
+  const grid = document.getElementById('preview-grid');
+  grid.innerHTML = '';
+  pendingFiles.forEach(f => {
+    if (f.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.className = 'preview-img';
+      img.src = URL.createObjectURL(f);
+      grid.appendChild(img);
+    } else {
+      const div = document.createElement('div');
+      div.className = 'preview-file';
+      div.textContent = f.name.split('.').pop().toUpperCase();
+      grid.appendChild(div);
+    }
+  });
+  document.getElementById('read-btn').style.display = 'inline-flex';
+  document.getElementById('clear-btn').style.display = 'inline-flex';
+}
+
+function clearFiles() {
+  pendingFiles = [];
+  document.getElementById('preview-grid').innerHTML = '';
+  document.getElementById('file-gallery').value = '';
+  document.getElementById('file-camera').value = '';
+  document.getElementById('read-btn').style.display = 'none';
+  document.getElementById('clear-btn').style.display = 'none';
+}
+
+async function fileToBase64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function readReceipts() {
+  const apiKey = getApiKey();
+  if (!apiKey) { showApiModal(); return; }
+  if (!pendingFiles.length) return;
+
+  const btn = document.getElementById('read-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 読み取り中...';
+  showStatus('AIが領収書を読み取っています...', 'info');
+
+  const useAI = document.getElementById('category-mode').value === 'ai';
+  const catInst = useAI
+    ? '勘定科目は内容から推測してください（消耗品費、通信費、交通費、会議費、食糧費、印刷費、雑費 など）。'
+    : '勘定科目は空欄にしてください。';
+
+  try {
+    const contentParts = [];
+    for (const file of pendingFiles) {
+      const b64 = await fileToBase64(file);
+      const mt = file.type || 'image/jpeg';
+      if (mt === 'application/pdf') {
+        contentParts.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+      } else {
+        contentParts.push({type:'image',source:{type:'base64',media_type:mt,data:b64}});
+      }
+    }
+    contentParts.push({type:'text',text:`添付された領収書から出納帳データを抽出してください。${catInst}\n以下のJSON形式のみで返してください。余分なテキスト不要。\n{"entries":[{"date":"YYYY-MM-DD","description":"摘要","income":収入金額または0,"expense":支出金額または0,"category":"勘定科目"}]}\n・金額は数値のみ（カンマなし）\n・通常の領収書は支出\n・日付不明は今日の日付\n・複数枚すべて抽出`});
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{role:'user',content:contentParts}]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || 'APIエラー');
+    }
+
+    const data = await resp.json();
+    const text = data.content.map(c=>c.text||'').join('');
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+
+    if (parsed.entries && parsed.entries.length) {
+      parsed.entries.forEach(e => {
+        ledger.push({
+          date: e.date||'',
+          slipNo: '',
+          category: e.category||'',
+          description: e.description||'',
+          income: e.income||null,
+          expense: e.expense||null,
+          aiGenerated: true
+        });
+      });
+      save(); render();
+      showStatus(`${parsed.entries.length}件を追記しました。内容を確認・修正してください。`, 'success');
+      clearFiles();
+    } else {
+      showStatus('データが取得できませんでした。画像を確認してください。', 'error');
+    }
+  } catch(err) {
+    showStatus('エラー: ' + err.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>✨</span> AIで読み取って追記';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.className = 'status ' + type;
+  el.textContent = msg;
+  if (type === 'success') setTimeout(()=>{ el.style.display='none'; el.className='status'; }, 4000);
+}
+
+function exportExcel() {
+  const balances = calcBalances();
+  const wsData = [['年月日','伝票No.','勘定科目','摘要','収入金額','支出金額','残高']];
+  ledger.forEach((r,i) => {
+    wsData.push([r.date||'', r.slipNo||'', r.category||'', r.description||'', r.income||'', r.expense||'', balances[i]]);
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:12},{wch:8},{wch:14},{wch:26},{wch:10},{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws, '金銭出納帳');
+  XLSX.writeFile(wb, '金銭出納帳.xlsx');
+}
+
+function clearAll() {
+  if (!confirm('すべての明細を削除しますか？')) return;
+  ledger = []; save(); render();
+}
+
+// モーダル外クリックで閉じる
+document.getElementById('api-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeApiModal();
+});
+
+load();
+
+// APIキー未設定なら初回自動表示
+if (!getApiKey()) {
+  setTimeout(showApiModal, 500);
+}
+</script>
+</body>
+</html>
