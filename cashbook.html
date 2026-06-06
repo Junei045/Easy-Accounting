@@ -25,18 +25,8 @@
   header { background: var(--green); color: white; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
   header h1 { font-size: 17px; font-weight: 600; letter-spacing: 0.05em; }
   header .header-sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
-  .api-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
   .container { max-width: 680px; margin: 0 auto; padding: 12px; }
 
-  /* APIキー設定モーダル */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
-  .modal-overlay.show { display: flex; }
-  .modal { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 420px; }
-  .modal h2 { font-size: 16px; margin-bottom: 8px; color: var(--green); }
-  .modal p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
-  .modal input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; font-family: monospace; }
-  .modal input:focus { outline: none; border-color: var(--green); }
-  .modal-btns { display: flex; gap: 8px; }
 
   /* カード */
   .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 12px; }
@@ -105,8 +95,6 @@
   .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .no-api-warning { background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #856404; margin-bottom: 12px; display: none; }
-  .no-api-warning.show { display: block; }
 </style>
 </head>
 <body>
@@ -116,27 +104,9 @@
     <div class="header-sub">豊田連合町内会</div>
     <h1>金銭出納帳</h1>
   </div>
-  <button class="api-btn" onclick="showApiModal()">APIキー設定</button>
 </header>
 
-<!-- APIキー設定モーダル -->
-<div class="modal-overlay" id="api-modal">
-  <div class="modal">
-    <h2>🔑 APIキーの設定</h2>
-    <p>AnthropicのAPIキー（sk-ant-で始まる文字列）を入力してください。キーはこの端末のブラウザに保存され、サーバーには送信されません。</p>
-    <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." />
-    <div class="modal-btns">
-      <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1">保存</button>
-      <button class="btn" onclick="closeApiModal()" style="flex:1">キャンセル</button>
-    </div>
-  </div>
-</div>
-
 <div class="container">
-
-  <div class="no-api-warning" id="no-api-warning">
-    ⚠️ APIキーが設定されていません。右上の「APIキー設定」からキーを入力してください。
-  </div>
 
   <div id="status" class="status"></div>
 
@@ -240,47 +210,11 @@ function load() {
       document.getElementById('carry-input').value = carryOver || '';
     }
   } catch(e) {}
-  checkApiKey();
   render();
 }
 
 function save() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ledger, carryOver})); } catch(e) {}
-}
-
-function getApiKey() {
-  return localStorage.getItem(API_KEY_STORAGE) || '';
-}
-
-function checkApiKey() {
-  const warning = document.getElementById('no-api-warning');
-  if (!getApiKey()) {
-    warning.classList.add('show');
-  } else {
-    warning.classList.remove('show');
-  }
-}
-
-function showApiModal() {
-  const key = getApiKey();
-  if (key) document.getElementById('api-key-input').value = key;
-  document.getElementById('api-modal').classList.add('show');
-}
-
-function closeApiModal() {
-  document.getElementById('api-modal').classList.remove('show');
-}
-
-function saveApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-ant-')) {
-    alert('APIキーは sk-ant- で始まる文字列です。確認してください。');
-    return;
-  }
-  localStorage.setItem(API_KEY_STORAGE, key);
-  closeApiModal();
-  checkApiKey();
-  showStatus('APIキーを保存しました', 'success');
 }
 
 function setCarry() {
@@ -393,8 +327,6 @@ async function fileToBase64(file) {
 }
 
 async function readReceipts() {
-  const apiKey = getApiKey();
-  if (!apiKey) { showApiModal(); return; }
   if (!pendingFiles.length) return;
 
   const btn = document.getElementById('read-btn');
@@ -504,17 +436,8 @@ function clearAll() {
   ledger = []; save(); render();
 }
 
-// モーダル外クリックで閉じる
-document.getElementById('api-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeApiModal();
-});
-
 load();
 
-// APIキー未設定なら初回自動表示
-if (!getApiKey()) {
-  setTimeout(showApiModal, 500);
-}
 </script>
 </body>
 </html>
