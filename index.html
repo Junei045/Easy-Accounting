@@ -1937,11 +1937,33 @@ function onReceiptFileSelected(input) {
     var preview = document.getElementById('receiptPreview');
     preview.src = e.target.result; preview.style.display = 'block';
     document.getElementById('receiptUploadArea').style.display = 'none';
-    analyzeReceiptWithAI(file, e.target.result);
+    // 画像を圧縮してからAI解析
+    compressImage(e.target.result, function(compressedDataUrl) {
+      analyzeReceiptWithAI(compressedDataUrl);
+    });
   };
   reader.readAsDataURL(file);
 }
-function analyzeReceiptWithAI(file, dataUrl) {
+
+// 画像を最大1200px・JPEG80%に圧縮
+function compressImage(dataUrl, callback) {
+  var img = new Image();
+  img.onload = function() {
+    var maxSize = 1200;
+    var w = img.width, h = img.height;
+    if (w > maxSize || h > maxSize) {
+      if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+      else       { w = Math.round(w * maxSize / h); h = maxSize; }
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.8));
+  };
+  img.src = dataUrl;
+}
+
+function analyzeReceiptWithAI(dataUrl) {
   var statusEl = document.getElementById('receiptStatus');
   statusEl.className = 'loading';
   statusEl.innerHTML = '<span class="spinner"></span> AIがレシートを解析中です…少々お待ちください';
@@ -1949,8 +1971,6 @@ function analyzeReceiptWithAI(file, dataUrl) {
   document.getElementById('receiptApplyBtn').style.display = 'none';
 
   var base64Data = dataUrl.split(',')[1];
-  var mediaType  = file.type || 'image/jpeg';
-  var org = allData[currentOrg];
   var allSubjects = DEFAULT_SUBJECTS.income.concat(DEFAULT_SUBJECTS.expense);
   var today = new Date();
   var todayStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
@@ -1967,23 +1987,25 @@ function analyzeReceiptWithAI(file, dataUrl) {
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514', max_tokens: 1000,
       messages: [{ role: 'user', content: [
-        { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Data } },
         { type: 'text', text: prompt }
       ]}]
     })
   })
   .then(function(res){ return res.json(); })
   .then(function(data) {
+    // APIエラーレスポンスの場合
+    if (data.error) throw new Error('API: ' + data.error.message);
     if (!data.content || !data.content[0]) throw new Error('AIからの応答が空です');
     var text = data.content[0].text || '';
     var jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('解析結果を読み取れませんでした');
+    if (!jsonMatch) throw new Error('解析結果を読み取れませんでした（AIの返答: ' + text.substring(0,100) + '）');
     receiptResult = JSON.parse(jsonMatch[0]);
     showReceiptResult(receiptResult);
   })
   .catch(function(err) {
     statusEl.className = 'error';
-    statusEl.innerHTML = '❌ 読み取りに失敗しました。画像がはっきり写っているか確認してください。<br><small>' + err.message + '</small>';
+    statusEl.innerHTML = '❌ 読み取りに失敗しました。<br><small style="word-break:break-all">' + err.message + '</small>';
   });
 }
 function showReceiptResult(r) {
