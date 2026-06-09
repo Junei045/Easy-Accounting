@@ -733,7 +733,7 @@
     <img id="receiptPreview" alt="レシート画像">
     <div id="receiptUploadArea">
       <div style="display:flex;gap:10px;margin-bottom:12px;">
-        <button onclick="document.getElementById('receiptCameraInput').click()"
+        <button onclick="receiptCameraActive=true; document.getElementById('receiptCameraInput').click()"
           style="flex:1;padding:16px 8px;background:linear-gradient(135deg,#1e7b4e,#2a9d6e);color:white;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
           <span style="font-size:28px;">📷</span>カメラで撮影
         </button>
@@ -1902,12 +1902,14 @@ function _doShowSection(name) {
 //   RECEIPT AI 読み取り
 // ============================
 var receiptResult = null;
+var receiptCameraActive = false;
 
 function openReceiptModal() {
   document.getElementById('receiptModal').classList.add('open');
   resetReceiptModal();
 }
 function closeReceiptModal() {
+  if (receiptCameraActive) return; // カメラ使用中は閉じない
   document.getElementById('receiptModal').classList.remove('open');
   resetReceiptModal();
 }
@@ -1925,8 +1927,11 @@ function resetReceiptModal() {
   receiptResult = null;
 }
 function onReceiptFileSelected(input) {
+  receiptCameraActive = false; // カメラ完了
   var file = input.files[0];
   if (!file) return;
+  // モーダルが閉じていたら再度開く
+  document.getElementById('receiptModal').classList.add('open');
   var reader = new FileReader();
   reader.onload = function(e) {
     var preview = document.getElementById('receiptPreview');
