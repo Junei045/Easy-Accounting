@@ -1981,7 +1981,7 @@ function analyzeReceiptWithAI(dataUrl) {
     '"type":"income または expense","subject":"最も近い勘定科目（選択肢: ' + allSubjects.join('、') + '）",' +
     '"payment":"cash または bank","note":"気になる点があれば、なければ空文字"}';
 
-  fetch('https://api.anthropic.com/v1/messages', {
+  fetch('https://anthropic-proxy.sakae-toyodarengou-18c.workers.dev', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
