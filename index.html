@@ -304,6 +304,67 @@
   }
   #micBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* ===== RECEIPT AI ===== */
+  .receipt-btn {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, #1e7b4e, #2a9d6e);
+    color: white; border: none; border-radius: var(--radius);
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; margin-bottom: 16px; letter-spacing: 0.03em;
+    box-shadow: 0 4px 12px rgba(30,123,78,0.3);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .receipt-btn:active { transform: scale(0.98); }
+  #receiptModal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 3000;
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  #receiptModal.open { display: flex; }
+  .receipt-modal-box {
+    background: var(--white); border-radius: 20px;
+    padding: 24px; width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .receipt-modal-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 18px; color: var(--navy); font-weight: 700;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  #receiptPreview {
+    width: 100%; border-radius: 12px; margin-bottom: 16px;
+    border: 2px solid var(--border); display: none;
+    max-height: 220px; object-fit: contain; background: #f0f0f0;
+  }
+  .receipt-upload-area {
+    border: 2.5px dashed var(--border); border-radius: 12px;
+    padding: 28px 16px; text-align: center;
+    cursor: pointer; background: var(--bg);
+    transition: border-color 0.2s, background 0.2s; margin-bottom: 16px;
+  }
+  .receipt-upload-area:hover { border-color: var(--green); background: #f0faf5; }
+  .receipt-upload-area .icon { font-size: 36px; margin-bottom: 8px; }
+  .receipt-upload-area p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+  #receiptStatus {
+    padding: 10px 14px; border-radius: 10px; font-size: 14px;
+    margin-bottom: 14px; display: none; line-height: 1.6;
+  }
+  #receiptStatus.loading { background:#e8f0f8;color:var(--navy);border:1.5px solid #b0c8e8;display:block; }
+  #receiptStatus.error   { background:#fdf0ee;color:var(--red);border:1.5px solid #e0a0a0;display:block; }
+  #receiptStatus.success { background:#e8f5ef;color:var(--green);border:1.5px solid #90d0aa;display:block; }
+  .receipt-result-table { width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px;display:none; }
+  .receipt-result-table td { padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top; }
+  .receipt-result-table td:first-child { font-weight:600;color:var(--text2);width:80px;white-space:nowrap; }
+  .receipt-result-table td:last-child { color:var(--text);font-weight:500; }
+  .receipt-modal-btns { display:flex;gap:10px; }
+  .receipt-modal-btns button { flex:1;padding:13px;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all 0.15s; }
+  .receipt-ok-btn { background:var(--navy);color:white; }
+  .receipt-cancel-btn { background:var(--bg2);color:var(--text2);border:2px solid var(--border) !important; }
+  .spinner { display:inline-block;width:16px;height:16px;border:2.5px solid rgba(26,58,92,0.3);border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* EMPTY STATE */
   .empty-state {
     text-align: center; padding: 48px 16px;
@@ -369,6 +430,10 @@
       <div class="card">
         <div class="card-title">💴 取引入力</div>
 
+        <button class="receipt-btn" onclick="openReceiptModal()">
+          📷 レシート・領収書を読み取る（AI自動入力）
+        </button>
+
         <div class="form-row">
           <label>収入・支出</label>
           <div class="radio-group">
@@ -415,43 +480,48 @@
             <option value="">-- 選択してください --</option>
             <optgroup label="収入科目">
               <option value="会費">会費</option>
-              <option value="補助金">補助金</option>
-              <option value="助成金">助成金</option>
-              <option value="寄付金">寄付金</option>
-              <option value="事業収入">事業収入</option>
-              <option value="受取利息">受取利息</option>
+              <option value="地域活動推進費">地域活動推進費</option>
+              <option value="その他交付金">その他交付金</option>
               <option value="雑収入">雑収入</option>
               <option value="前年度繰越金">前年度繰越金</option>
+              <option value="積立金">積立金</option>
             </optgroup>
-            <optgroup label="支出科目">
-              <option value="消耗品費">消耗品費</option>
-              <option value="備品費">備品費</option>
+            <optgroup label="支出科目（事務費）">
+              <option value="消耗品">消耗品</option>
+              <option value="備品">備品</option>
               <option value="印刷費">印刷費</option>
-              <option value="通信費">通信費</option>
-              <option value="旅費交通費">旅費交通費</option>
-              <option value="水光熱費">水光熱費</option>
-              <option value="修繕費">修繕費</option>
+              <option value="通信運搬費">通信運搬費</option>
+              <option value="事務所維持費">事務所維持費</option>
+            </optgroup>
+            <optgroup label="支出科目（会議費）">
               <option value="総会費">総会費</option>
-              <option value="会議費">会議費</option>
+              <option value="会場費">会場費</option>
               <option value="諸会議費">諸会議費</option>
+            </optgroup>
+            <optgroup label="支出科目（会費分担金）">
               <option value="区スポーツ協会費">区スポーツ協会費</option>
               <option value="区更生保護協会費">区更生保護協会費</option>
               <option value="栄防犯協会費">栄防犯協会費</option>
-              <option value="その他会費分担金">その他会費分担金</option>   
-              <option value="総務部費">総務部費</option>              
+              <option value="その他会費分担金">その他会費分担金</option>
+            </optgroup>
+            <optgroup label="支出科目（事業費）">
+              <option value="総務部費">総務部費</option>
               <option value="役員活動費">役員活動費</option>
               <option value="福祉厚生部費">福祉厚生部費</option>
               <option value="防犯防災部費">防犯防災部費</option>
+              <option value="交通部費">交通部費</option>
               <option value="助成金">助成金</option>
               <option value="その他事業費">その他事業費</option>
-              <option value="慶弔費">慶弔費</option>
-              <option value="交際費">交際費</option>
-              <option value="助成金戻入金">助成金戻入金</option>
-              <option value="保険料">保険料</option>
-              <option value="雑費">雑費</option>
+            </optgroup>
+            <optgroup label="支出科目（その他）">
+              <option value="慶弔交際費">慶弔交際費</option>
+              <option value="懇親会費">懇親会費</option>
               <option value="予備費">予備費</option>
+              <option value="その他">その他</option>
+            </optgroup>
+            <optgroup label="支出科目（繰越・積立）">
               <option value="次年度繰越金">次年度繰越金</option>
-              <option value="積立金">積立金</option>
+              <option value="積立金">積立金（支出）</option>
             </optgroup>
           </select>
         </div>
@@ -656,6 +726,32 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- ===== RECEIPT AI MODAL ===== -->
+<div id="receiptModal">
+  <div class="receipt-modal-box">
+    <div class="receipt-modal-title">📷 レシート・領収書 AI読み取り</div>
+    <img id="receiptPreview" alt="レシート画像">
+    <div class="receipt-upload-area" onclick="document.getElementById('receiptFileInput').click()" id="receiptUploadArea">
+      <div class="icon">📸</div>
+      <p>ここをタップして<br>写真を選択または撮影</p>
+    </div>
+    <input type="file" id="receiptFileInput" accept="image/*" style="display:none" onchange="onReceiptFileSelected(this)">
+    <div id="receiptStatus"></div>
+    <table class="receipt-result-table" id="receiptResultTable">
+      <tr><td>日付</td><td id="r_date">—</td></tr>
+      <tr><td>金額</td><td id="r_amount">—</td></tr>
+      <tr><td>摘要</td><td id="r_desc">—</td></tr>
+      <tr><td>収支</td><td id="r_type">—</td></tr>
+      <tr><td>勘定科目</td><td id="r_subject">—</td></tr>
+      <tr><td>決済方法</td><td id="r_payment">—</td></tr>
+    </table>
+    <div class="receipt-modal-btns">
+      <button class="receipt-cancel-btn" onclick="closeReceiptModal()">キャンセル</button>
+      <button class="receipt-ok-btn" id="receiptApplyBtn" onclick="applyReceiptData()" style="display:none">✅ フォームに入力する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CONFIRM MODAL ===== -->
 <div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:24px;">
   <div style="background:white;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
@@ -854,8 +950,8 @@ function hideVoiceStatus() {
 //   SUBJECTS
 // ============================
 var DEFAULT_SUBJECTS = {
-  income: ['前年度繰越金','会費','補助金','助成金','寄付金','事業収入','受取利息','雑収入'],
-  expense: ['消耗品費','備品費','印刷費','通信費','旅費交通費','水光熱費','修繕費','総会費','会議費','諸会議費','区スポーツ協会費','区更生保護','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','助成金','その他事業費','慶弔費','交際費','助成金戻入金','保険料','雑費','予備費','次年度繰越','積立金']
+  income: ['会費','地域活動推進費','その他交付金','雑収入','前年度繰越金','積立金'],
+  expense: ['消耗品','備品','印刷費','通信運搬費','事務所維持費','総会費','会場費','諸会議費','区スポーツ協会費','区更生保護協会費','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','交通部費','助成金','その他事業費','慶弔交際費','懇親会費','予備費','その他','次年度繰越金','積立金（支出）']
 };
 
 function getSubjects() {
@@ -1327,39 +1423,160 @@ function renderSubject() {
 // ============================
 var currentReportTab = 'own';
 
+// 決算報告書の構造定義（PDFの項目に合わせた大区分・小区分）
+var REPORT_STRUCTURE = {
+  income: [
+    { label: '会費', subjects: ['会費'] },
+    { label: '地域活動推進費', subjects: ['地域活動推進費'] },
+    { label: 'その他交付金', subjects: ['その他交付金'] },
+    { label: '雑収入', subjects: ['雑収入'] },
+    { label: '前年度繰越金', subjects: ['前年度繰越金'] },
+    { label: '積立金', subjects: ['積立金'] }
+  ],
+  expense: [
+    {
+      label: '事務費', children: [
+        { label: '消耗品', subjects: ['消耗品'] },
+        { label: '備品', subjects: ['備品'] },
+        { label: '印刷費', subjects: ['印刷費'] },
+        { label: '通信運搬費', subjects: ['通信運搬費'] },
+        { label: '事務所維持費', subjects: ['事務所維持費'] }
+      ]
+    },
+    {
+      label: '会議費', children: [
+        { label: '総会費', subjects: ['総会費'] },
+        { label: '会場費', subjects: ['会場費'] },
+        { label: '諸会議費', subjects: ['諸会議費'] }
+      ]
+    },
+    {
+      label: '会費分担金', children: [
+        { label: '区スポーツ協会費', subjects: ['区スポーツ協会費'] },
+        { label: '区更生保護協会費', subjects: ['区更生保護協会費'] },
+        { label: '栄防犯協会費', subjects: ['栄防犯協会費'] },
+        { label: 'その他会費分担金', subjects: ['その他会費分担金'] }
+      ]
+    },
+    {
+      label: '事業費', children: [
+        { label: '総務部費', subjects: ['総務部費'] },
+        { label: '役員活動費', subjects: ['役員活動費'] },
+        { label: '福祉厚生部費', subjects: ['福祉厚生部費'] },
+        { label: '防犯防災部費', subjects: ['防犯防災部費'] },
+        { label: '交通部費', subjects: ['交通部費'] },
+        { label: '助成金', subjects: ['助成金'] },
+        { label: 'その他事業費', subjects: ['その他事業費'] }
+      ]
+    },
+    {
+      label: 'その他', children: [
+        { label: '慶弔交際費', subjects: ['慶弔交際費'] },
+        { label: '懇親会費', subjects: ['懇親会費'] },
+        { label: '予備費', subjects: ['予備費'] },
+        { label: 'その他', subjects: ['その他'] }
+      ]
+    },
+    { label: '次年度繰越金', subjects: ['次年度繰越金'] },
+    { label: '積立金', subjects: ['積立金（支出）'] }
+  ]
+};
+
+function sumSubjects(entries, subjectNames, type) {
+  return entries
+    .filter(function(e){ return e.type === type && subjectNames.indexOf(e.subject) !== -1; })
+    .reduce(function(s, e){ return s + e.amount; }, 0);
+}
+
+function fmtAmt(v, cls) {
+  if (!v) return '<td class="text-right" style="color:var(--text2)">—</td>';
+  return '<td class="text-right ' + cls + '">¥' + v.toLocaleString() + '</td>';
+}
+
 function renderReport() {
   var year = document.getElementById('reportYear') && document.getElementById('reportYear').value;
   if (!year) return;
   var entries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
   if (currentReportTab === 'yoko') { renderYokoReport(year, entries); return; }
 
-  var orgName  = allData[currentOrg] && allData[currentOrg].orgName ? allData[currentOrg].orgName : '';
-  var subjects = {};
-  entries.forEach(function(e) {
-    if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
-    if (e.type === 'income') subjects[e.subject].income += e.amount;
-    else subjects[e.subject].expense += e.amount;
+  var orgName = allData[currentOrg] && allData[currentOrg].orgName ? allData[currentOrg].orgName : '';
+
+  // ---- 収入の部 ----
+  var incRows = '';
+  var totalInc = 0;
+  REPORT_STRUCTURE.income.forEach(function(item) {
+    var amt = sumSubjects(entries, item.subjects, 'income');
+    if (amt) totalInc += amt;
+    incRows += '<tr><td>　' + item.label + '</td>' + fmtAmt(amt, 'amount-income') + '<td></td></tr>';
   });
-  var incSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].income > 0; });
-  var expSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].expense > 0; });
-  var totalInc = incSubs.reduce(function(s,kv){ return s+kv[1].income; }, 0);
-  var totalExp = expSubs.reduce(function(s,kv){ return s+kv[1].expense; }, 0);
-  var balance  = totalInc - totalExp;
+  // 構造に未定義の科目があれば「その他収入」として拾う
+  var definedInc = REPORT_STRUCTURE.income.reduce(function(a,b){ return a.concat(b.subjects); }, []);
+  var otherInc = entries.filter(function(e){ return e.type==='income' && definedInc.indexOf(e.subject)===-1; })
+    .reduce(function(s,e){ return s+e.amount; }, 0);
+  if (otherInc) { totalInc += otherInc; incRows += '<tr><td>　その他収入</td>' + fmtAmt(otherInc,'amount-income') + '<td></td></tr>'; }
+
+  // ---- 支出の部 ----
+  var expRows = '';
+  var totalExp = 0;
+  REPORT_STRUCTURE.expense.forEach(function(item) {
+    if (item.children) {
+      // 大区分（小計行）
+      var groupTotal = 0;
+      var childRows = '';
+      item.children.forEach(function(child) {
+        var amt = sumSubjects(entries, child.subjects, 'expense');
+        if (amt) groupTotal += amt;
+        childRows += '<tr><td style="padding-left:28px">　' + child.label + '</td>' + fmtAmt(amt,'amount-expense') + '<td></td></tr>';
+      });
+      expRows += '<tr style="background:var(--bg2)"><td><strong>' + item.label + '</strong></td>' + fmtAmt(groupTotal,'amount-expense') + '<td></td></tr>';
+      expRows += childRows;
+      totalExp += groupTotal;
+    } else {
+      var amt2 = sumSubjects(entries, item.subjects, 'expense');
+      if (amt2) totalExp += amt2;
+      expRows += '<tr><td>　' + item.label + '</td>' + fmtAmt(amt2,'amount-expense') + '<td></td></tr>';
+    }
+  });
+  // 構造未定義の支出科目を拾う
+  var definedExp = REPORT_STRUCTURE.expense.reduce(function(a,b){
+    if (b.children) return a.concat(b.children.reduce(function(c,d){ return c.concat(d.subjects); }, []));
+    return a.concat(b.subjects);
+  }, []);
+  var otherExp = entries.filter(function(e){ return e.type==='expense' && definedExp.indexOf(e.subject)===-1; })
+    .reduce(function(s,e){ return s+e.amount; }, 0);
+  if (otherExp) { totalExp += otherExp; expRows += '<tr><td>　未分類支出</td>' + fmtAmt(otherExp,'amount-expense') + '<td></td></tr>'; }
+
+  var balance = totalInc - totalExp;
+  var thStyle = 'background:var(--navy);color:white;padding:8px 12px;';
 
   document.getElementById('reportContent').innerHTML =
-    '<div class="report-header"><h2>' + orgName + '</h2><h2>' + year + '年度　決算報告書</h2><p>会計年度：' + year + '年4月1日 〜 ' + (+year+1) + '年3月31日</p></div>' +
+    '<div class="report-header"><h2>' + orgName + '</h2>' +
+    '<h2>' + year + '年度　決算報告書</h2>' +
+    '<p>会計年度：' + year + '年4月1日 〜 ' + (+year+1) + '年3月31日</p></div>' +
+
     '<div class="report-section"><h3>【収入の部】</h3><div class="ledger-table"><table class="report-table">' +
-    '<thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead><tbody>' +
-    incSubs.map(function(kv){ return '<tr><td>　' + kv[0] + '</td><td class="text-right">-</td><td class="text-right amount-income">¥' + kv[1].income.toLocaleString() + '</td><td></td></tr>'; }).join('') +
-    '<tr class="subtotal"><td><strong>収入合計</strong></td><td class="text-right">-</td><td class="text-right amount-income"><strong>¥' + totalInc.toLocaleString() + '</strong></td><td></td></tr>' +
+    '<thead><tr><th style="' + thStyle + '">項目</th><th style="' + thStyle + 'text-align:right">決算額</th><th style="' + thStyle + '">備考</th></tr></thead><tbody>' +
+    incRows +
+    '<tr class="subtotal"><td><strong>収入合計</strong></td><td class="text-right amount-income"><strong>¥' + totalInc.toLocaleString() + '</strong></td><td></td></tr>' +
     '</tbody></table></div></div>' +
+
     '<div class="report-section"><h3>【支出の部】</h3><div class="ledger-table"><table class="report-table">' +
-    '<thead><tr><th>科目</th><th class="text-right">予算額</th><th class="text-right">決算額</th><th class="text-right">備考</th></tr></thead><tbody>' +
-    expSubs.map(function(kv){ return '<tr><td>　' + kv[0] + '</td><td class="text-right">-</td><td class="text-right amount-expense">¥' + kv[1].expense.toLocaleString() + '</td><td></td></tr>'; }).join('') +
-    '<tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right">-</td><td class="text-right amount-expense"><strong>¥' + totalExp.toLocaleString() + '</strong></td><td></td></tr>' +
+    '<thead><tr><th style="' + thStyle + '">項目</th><th style="' + thStyle + 'text-align:right">決算額</th><th style="' + thStyle + '">備考</th></tr></thead><tbody>' +
+    expRows +
+    '<tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right amount-expense"><strong>¥' + totalExp.toLocaleString() + '</strong></td><td></td></tr>' +
     '</tbody></table></div></div>' +
-    '<div class="ledger-table"><table class="report-table"><tr class="total"><td><strong>【収支差額】（収入合計 − 支出合計）</strong></td><td class="text-right"><strong>' + (balance<0?'△':'') + '¥' + Math.abs(balance).toLocaleString() + '</strong></td></tr></table></div>' +
-    '<div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">以上のとおり' + year + '年度の会計を報告いたします。<br><br><div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px"><span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span><span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span></div></div>';
+
+    '<div class="ledger-table"><table class="report-table">' +
+    '<tr class="total"><td><strong>【収支差額】（収入合計 − 支出合計）</strong></td>' +
+    '<td class="text-right"><strong>' + (balance<0?'△':'') + '¥' + Math.abs(balance).toLocaleString() + '</strong></td></tr>' +
+    '</table></div>' +
+
+    '<div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">' +
+    '以上のとおり' + year + '年度の会計を報告いたします。<br><br>' +
+    '<div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px">' +
+    '<span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span>' +
+    '<span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span>' +
+    '</div></div>';
 }
 
 // ============================
@@ -1669,6 +1886,122 @@ function _doShowSection(name) {
   if (name === 'report')    renderReport();
   if (name === 'settings')  { renderSubjectSettings(); renderMappingSettings(); }
   if (name !== 'settings')  settingsUnlocked = false;
+}
+
+// ============================
+//   RECEIPT AI 読み取り
+// ============================
+var receiptResult = null;
+
+function openReceiptModal() {
+  document.getElementById('receiptModal').classList.add('open');
+  resetReceiptModal();
+}
+function closeReceiptModal() {
+  document.getElementById('receiptModal').classList.remove('open');
+  resetReceiptModal();
+}
+function resetReceiptModal() {
+  var preview = document.getElementById('receiptPreview');
+  preview.style.display = 'none'; preview.src = '';
+  document.getElementById('receiptUploadArea').style.display = 'block';
+  document.getElementById('receiptStatus').className = '';
+  document.getElementById('receiptStatus').innerHTML = '';
+  document.getElementById('receiptResultTable').style.display = 'none';
+  document.getElementById('receiptApplyBtn').style.display = 'none';
+  document.getElementById('receiptFileInput').value = '';
+  receiptResult = null;
+}
+function onReceiptFileSelected(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var preview = document.getElementById('receiptPreview');
+    preview.src = e.target.result; preview.style.display = 'block';
+    document.getElementById('receiptUploadArea').style.display = 'none';
+    analyzeReceiptWithAI(file, e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+function analyzeReceiptWithAI(file, dataUrl) {
+  var statusEl = document.getElementById('receiptStatus');
+  statusEl.className = 'loading';
+  statusEl.innerHTML = '<span class="spinner"></span> AIがレシートを解析中です…少々お待ちください';
+  document.getElementById('receiptResultTable').style.display = 'none';
+  document.getElementById('receiptApplyBtn').style.display = 'none';
+
+  var base64Data = dataUrl.split(',')[1];
+  var mediaType  = file.type || 'image/jpeg';
+  var org = allData[currentOrg];
+  var allSubjects = DEFAULT_SUBJECTS.income.concat(DEFAULT_SUBJECTS.expense);
+  var today = new Date();
+  var todayStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
+
+  var prompt = 'このレシートまたは領収書の画像を解析してください。今日の日付は' + todayStr + 'です。\n' +
+    '以下の項目をJSON形式のみで返してください。前置きや説明は不要です。\n\n' +
+    '{"date":"YYYY-MM-DD形式","amount":数値のみ税込合計,"desc":"店名や内容を簡潔に",' +
+    '"type":"income または expense","subject":"最も近い勘定科目（選択肢: ' + allSubjects.join('、') + '）",' +
+    '"payment":"cash または bank","note":"気になる点があれば、なければ空文字"}';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+        { type: 'text', text: prompt }
+      ]}]
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data) {
+    if (!data.content || !data.content[0]) throw new Error('AIからの応答が空です');
+    var text = data.content[0].text || '';
+    var jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('解析結果を読み取れませんでした');
+    receiptResult = JSON.parse(jsonMatch[0]);
+    showReceiptResult(receiptResult);
+  })
+  .catch(function(err) {
+    statusEl.className = 'error';
+    statusEl.innerHTML = '❌ 読み取りに失敗しました。画像がはっきり写っているか確認してください。<br><small>' + err.message + '</small>';
+  });
+}
+function showReceiptResult(r) {
+  var statusEl = document.getElementById('receiptStatus');
+  statusEl.className = 'success';
+  statusEl.innerHTML = '✅ 読み取り完了！内容を確認してフォームに入力できます。' + (r.note ? '<br><small>⚠️ ' + r.note + '</small>' : '');
+  document.getElementById('r_date').textContent    = r.date    || '不明';
+  document.getElementById('r_amount').textContent  = r.amount  ? '¥' + Number(r.amount).toLocaleString() : '不明';
+  document.getElementById('r_desc').textContent    = r.desc    || '不明';
+  document.getElementById('r_type').textContent    = r.type === 'income' ? '▲ 収入' : '▼ 支出';
+  document.getElementById('r_subject').textContent = r.subject || '不明';
+  document.getElementById('r_payment').textContent = r.payment === 'bank' ? '🏦 銀行口座' : '💴 現金';
+  document.getElementById('receiptResultTable').style.display = 'table';
+  document.getElementById('receiptApplyBtn').style.display = 'block';
+}
+function applyReceiptData() {
+  if (!receiptResult) return;
+  var r = receiptResult;
+  if (r.date)   document.getElementById('entryDate').value   = r.date;
+  if (r.amount) document.getElementById('entryAmount').value = r.amount;
+  if (r.desc)   document.getElementById('entryDesc').value   = r.desc;
+  var typeVal = r.type === 'income' ? 'income' : 'expense';
+  document.querySelectorAll('input[name="type"]').forEach(function(radio){ if (radio.value===typeVal) radio.checked=true; });
+  if (r.subject) {
+    var sel = document.getElementById('entrySubject');
+    for (var i=0; i<sel.options.length; i++) {
+      if (sel.options[i].value === r.subject) { sel.selectedIndex=i; break; }
+    }
+  }
+  var payVal = r.payment === 'bank' ? 'bank' : 'cash';
+  document.querySelectorAll('input[name="payment"]').forEach(function(radio){ if (radio.value===payVal) radio.checked=true; });
+  updateRadio();
+  closeReceiptModal();
+  showToast('✅ レシートの内容をフォームに入力しました');
+  document.getElementById('section-entry').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 // ============================
