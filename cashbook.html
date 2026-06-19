@@ -350,7 +350,24 @@ async function readReceipts() {
         contentParts.push({type:'image',source:{type:'base64',media_type:mt,data:b64}});
       }
     }
-    contentParts.push({type:'text',text:`添付された領収書から出納帳データを抽出してください。${catInst}\n以下のJSON形式のみで返してください。余分なテキスト不要。\n{"entries":[{"date":"YYYY-MM-DD","description":"摘要","income":収入金額または0,"expense":支出金額または0,"category":"勘定科目"}]}\n・金額は数値のみ（カンマなし）\n・通常の領収書は支出\n・日付不明は今日の日付\n・複数枚すべて抽出`});
+    contentParts.push({type:'text',text:`添付された領収書（複数可）から出納帳データを抽出し、JSONのみで返してください。前後に説明文やコードブロック記号を付けないこと。
+
+【金額のルール／最重要】
+・採用する金額は必ず「合計」「税込合計」「お買上計」など最終的な支払総額。
+・「お預り」「現金」「おつり」「釣り」「クレジット」「ポイント利用」の金額は絶対に採用しない。
+・消費税を含んだ最終合計を income/expense に入れる。
+・数値のみ（カンマ・円記号・空白を含めない）。
+
+【日付】記載の日付を YYYY-MM-DD で。和暦（令和等）は西暦に変換。読み取れなければ date は null。
+
+【収支】通常の領収書・レシートは expense（支出）、income は0。会費・補助金など受領を示す書類のみ income。
+
+${catInst}
+
+【出力形式】このJSONのみ：
+{"entries":[{"date":"YYYY-MM-DD または null","description":"店名や品目の要約","income":数値,"expense":数値,"category":"勘定科目または空文字"}]}
+・複数枚はすべて entries に含める。
+・判読できない項目は推測せず、文字列は ""、数値は0、date は null。`});
 
     const resp = await fetch('https://anthropic-proxy.sakae-toyodarengou-18c.workers.dev', {
       method: 'POST',
@@ -358,8 +375,8 @@ async function readReceipts() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
         messages: [{role:'user',content:contentParts}]
       })
     });
@@ -383,12 +400,15 @@ async function readReceipts() {
     }
 
     const text = data.content.map(c=>c.text||'').join('');
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    let jsonText = text.replace(/```json|```/g,'').trim();
+    const js = jsonText.indexOf('{'), je = jsonText.lastIndexOf('}');
+    if (js !== -1 && je !== -1) jsonText = jsonText.slice(js, je + 1);
+    const parsed = JSON.parse(jsonText);
 
     if (parsed.entries && parsed.entries.length) {
       parsed.entries.forEach(e => {
         ledger.push({
-          date: e.date||'',
+          date: e.date || new Date().toISOString().slice(0,10),
           slipNo: '',
           category: e.category||'',
           description: e.description||'',
