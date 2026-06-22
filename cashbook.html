@@ -377,6 +377,7 @@ ${catInst}
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 2000,
+        system: 'あなたはレシート解析専用のAPIです。ユーザーの指示に従い、JSONのみを返してください。説明文、コードブロック記号（```）、前後の文章は一切出力しないこと。',
         messages: [{role:'user',content:contentParts}]
       })
     });
@@ -412,8 +413,8 @@ ${catInst}
           slipNo: '',
           category: e.category||'',
           description: e.description||'',
-          income: e.income||null,
-          expense: e.expense||null,
+          income: (e.income != null && e.income !== 0) ? e.income : null,
+          expense: (e.expense != null && e.expense !== 0) ? e.expense : null,
           aiGenerated: true
         });
       });
