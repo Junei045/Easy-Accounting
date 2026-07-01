@@ -35,6 +35,47 @@
     font-size: 15px;
   }
 
+  /* ===== RECEIPT AI ===== */
+  .receipt-upload-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .receipt-upload-btn {
+    position: relative; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    padding: 14px 8px; border: 1.5px dashed var(--border);
+    border-radius: 10px; cursor: pointer; background: var(--bg);
+    transition: all .15s;
+  }
+  .receipt-upload-btn:hover { border-color: var(--gold); background: #fdf8e8; }
+  .receipt-upload-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .receipt-upload-btn .r-icon { font-size: 26px; }
+  .receipt-upload-btn span { font-size: 13px; font-weight: 500; color: var(--text); }
+  .receipt-upload-btn small { font-size: 11px; color: var(--text2); }
+  .receipt-preview-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .receipt-preview-img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+  .receipt-preview-file { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 11px; color: var(--text2); text-align: center; }
+  .receipt-action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .receipt-status { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 10px; display: none; }
+  .receipt-status.info { background: #e8f0f8; color: var(--navy); display: block; }
+  .receipt-status.success { background: #e8f5ef; color: var(--green); display: block; }
+  .receipt-status.error { background: #fdf0ee; color: var(--red); display: block; }
+  .receipt-read-btn {
+    display: none; align-items: center; gap: 6px;
+    padding: 10px 16px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: white; border: none; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    transition: all .15s;
+  }
+  .receipt-read-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .receipt-clear-btn {
+    display: none; align-items: center; gap: 4px;
+    padding: 10px 14px; border-radius: 8px;
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text2); cursor: pointer;
+    font-family: inherit; font-size: 13px;
+  }
+  .r-spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: rspin .7s linear infinite; display: inline-block; }
+  @keyframes rspin { to { transform: rotate(360deg); } }
+
   /* ===== LOGIN ===== */
   #loginScreen {
     display: flex; flex-direction: column; align-items: center;
@@ -366,6 +407,34 @@
 
     <!-- ===== ENTRY ===== -->
     <div class="section active" id="section-entry">
+
+      <!-- レシートAI読み取り -->
+      <div class="card">
+        <div class="card-title">📷 レシート・領収書をAIで読み取る</div>
+        <div class="receipt-upload-btns">
+          <label class="receipt-upload-btn">
+            <input type="file" id="receiptFileGallery" accept="image/*,application/pdf" multiple onchange="receiptHandleFiles(this.files)" />
+            <div class="r-icon">🖼️</div>
+            <span>ファイルを選択</span>
+            <small>写真・PDF（複数可）</small>
+          </label>
+          <label class="receipt-upload-btn">
+            <input type="file" id="receiptFileCamera" accept="image/*" capture="environment" onchange="receiptHandleFiles(this.files)" />
+            <div class="r-icon">📷</div>
+            <span>カメラで撮影</span>
+            <small>スマホのカメラを起動</small>
+          </label>
+        </div>
+        <div id="receiptPreviewGrid" class="receipt-preview-grid"></div>
+        <div class="receipt-action-row">
+          <button class="receipt-read-btn" id="receiptReadBtn" onclick="receiptReadAndFill()">
+            <span>✨</span> AIで読み取って入力欄に反映
+          </button>
+          <button class="receipt-clear-btn" id="receiptClearBtn" onclick="receiptClearFiles()">✕ クリア</button>
+        </div>
+        <div id="receiptStatus" class="receipt-status"></div>
+      </div>
+
       <div class="card">
         <div class="card-title">💴 取引入力</div>
 
@@ -474,7 +543,7 @@
         </div>
 
         <button class="submit-btn" onclick="submitEntry()">✅ 登録する</button>
-      </div>
+      </div><!-- /取引入力card -->
     </div>
 
     <!-- ===== LEDGER ===== -->
@@ -655,59 +724,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- ===== EDIT ENTRY MODAL ===== -->
-<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:24px;">
-  <div style="background:white;border-radius:16px;padding:24px 22px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
-    <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px;">✏️ 伝票の編集</div>
-
-    <div class="form-row">
-      <label>収入／支出</label>
-      <div class="radio-group">
-        <label class="radio-label income" id="editLblIncome"><input type="radio" name="editType" value="income" onchange="updateEditRadio()"> 収入</label>
-        <label class="radio-label expense" id="editLblExpense"><input type="radio" name="editType" value="expense" onchange="updateEditRadio()"> 支出</label>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <label>日付</label>
-      <input type="date" id="editDate">
-    </div>
-
-    <div class="form-row amount">
-      <label>金額（円）</label>
-      <input type="number" id="editAmount" inputmode="numeric">
-    </div>
-
-    <div class="form-row">
-      <label>摘要</label>
-      <input type="text" id="editDesc">
-    </div>
-
-    <div class="form-row">
-      <label>勘定科目</label>
-      <select id="editSubject"></select>
-    </div>
-
-    <div class="form-row">
-      <label>伝票番号（任意）</label>
-      <input type="text" id="editVoucherNo">
-    </div>
-
-    <div class="form-row">
-      <label>決済方法</label>
-      <div class="radio-group">
-        <label class="radio-label bank" id="editLblBank"><input type="radio" name="editPayment" value="bank" onchange="updateEditRadio()"> 銀行口座</label>
-        <label class="radio-label cash" id="editLblCash"><input type="radio" name="editPayment" value="cash" onchange="updateEditRadio()"> 現金</label>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:8px;">
-      <button onclick="closeEditModal()" style="flex:1;padding:13px;border:2px solid #d0c8b8;background:#f4f1eb;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;color:#5a5550;font-weight:600;">キャンセル</button>
-      <button onclick="saveEditEntry()" style="flex:1;padding:13px;border:none;background:var(--navy);color:white;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;font-weight:700;">保存する</button>
-    </div>
-  </div>
-</div>
 
 <!-- ===== CONFIRM MODAL ===== -->
 <div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:24px;">
@@ -1270,7 +1286,7 @@ function renderLedger() {
   }
 
   var balance = 0;
-  var html = '<table><thead><tr><th>日付</th><th>摘要</th><th>科目</th><th>伝票No</th><th>収入</th><th>支出</th><th>残高</th><th class="no-print">操作</th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>日付</th><th>摘要</th><th>科目</th><th>伝票No</th><th>収入</th><th>支出</th><th>残高</th><th class="no-print">削除</th></tr></thead><tbody>';
   entries.forEach(function(e) {
     var inc = e.type === 'income' ? e.amount : 0;
     var exp = e.type === 'expense' ? e.amount : 0;
@@ -1283,10 +1299,7 @@ function renderLedger() {
       '<td class="text-right ' + (e.type==='income'?'amount-income':'') + '">' + (inc?'¥'+inc.toLocaleString():'') + '</td>' +
       '<td class="text-right ' + (e.type==='expense'?'amount-expense':'') + '">' + (exp?'¥'+exp.toLocaleString():'') + '</td>' +
       '<td class="text-right">' + (balance<0?'△':'') + '<strong>¥' + Math.abs(balance).toLocaleString() + '</strong></td>' +
-      '<td class="no-print" style="white-space:nowrap;">' +
-        '<button onclick="openEditModal(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--navy);font-size:18px;padding:4px 6px;">✏️</button>' +
-        '<button onclick="confirmDelete(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:18px;padding:4px 6px;">🗑️</button>' +
-      '</td>' +
+      '<td class="no-print"><button onclick="confirmDelete(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:20px;padding:4px 8px;">🗑️</button></td>' +
       '</tr>';
   });
   html += '</tbody></table>';
@@ -1305,96 +1318,6 @@ function confirmDelete(id) {
       showToast('🗑️ 削除しました');
     }, '削除する'
   );
-}
-
-// ============================
-//   EDIT ENTRY MODAL
-// ============================
-var editingEntryId = null;
-
-function rebuildEditSubjectSelect() {
-  var subs = getSubjects();
-  var sel = document.getElementById('editSubject');
-  sel.innerHTML = '<option value="">-- 選択してください --</option>' +
-    '<optgroup label="収入科目">' + subs.income.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('') + '</optgroup>' +
-    '<optgroup label="支出科目">' + subs.expense.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('') + '</optgroup>';
-}
-
-function updateEditRadio() {
-  var typeVal = document.querySelector('input[name="editType"]:checked') && document.querySelector('input[name="editType"]:checked').value;
-  var payVal  = document.querySelector('input[name="editPayment"]:checked') && document.querySelector('input[name="editPayment"]:checked').value;
-  document.getElementById('editLblIncome').classList.toggle('checked', typeVal === 'income');
-  document.getElementById('editLblExpense').classList.toggle('checked', typeVal === 'expense');
-  document.getElementById('editLblBank').classList.toggle('checked', payVal === 'bank');
-  document.getElementById('editLblCash').classList.toggle('checked', payVal === 'cash');
-}
-
-function openEditModal(id) {
-  var entry = getEntries().find(function(e){ return e.id === id; });
-  if (!entry) return;
-  editingEntryId = id;
-
-  rebuildEditSubjectSelect();
-
-  document.getElementById('editDate').value = entry.date;
-  document.getElementById('editAmount').value = entry.amount;
-  document.getElementById('editDesc').value = entry.desc;
-  document.getElementById('editSubject').value = entry.subject;
-  document.getElementById('editVoucherNo').value = entry.voucherNo || '';
-
-  var typeRadio = document.querySelector('input[name="editType"][value="' + entry.type + '"]');
-  if (typeRadio) typeRadio.checked = true;
-  var payRadio = document.querySelector('input[name="editPayment"][value="' + entry.payment + '"]');
-  if (payRadio) payRadio.checked = true;
-  updateEditRadio();
-
-  document.getElementById('editModal').style.display = 'flex';
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').style.display = 'none';
-  editingEntryId = null;
-}
-
-function saveEditEntry() {
-  if (!editingEntryId) return;
-
-  var type      = document.querySelector('input[name="editType"]:checked') && document.querySelector('input[name="editType"]:checked').value;
-  var date      = document.getElementById('editDate').value;
-  var amount    = parseInt(document.getElementById('editAmount').value);
-  var desc      = document.getElementById('editDesc').value.trim();
-  var subject   = document.getElementById('editSubject').value;
-  var voucherNo = document.getElementById('editVoucherNo').value.trim();
-  var payment   = document.querySelector('input[name="editPayment"]:checked') && document.querySelector('input[name="editPayment"]:checked').value;
-
-  if (!type) { showToast('収入／支出を選択してください'); return; }
-  if (!date) { showToast('日付を入力してください'); return; }
-  if (!amount || amount <= 0) { showToast('金額を入力してください'); return; }
-  if (!subject) { showToast('勘定科目を選択してください'); return; }
-  if (!payment) { showToast('決済方法を選択してください'); return; }
-
-  var descCheck = validateInput(desc, '摘要', 200);
-  if (!descCheck.ok) { showToast(descCheck.reason); return; }
-  if (voucherNo) {
-    var voucherCheck = validateInput(voucherNo, '伝票番号', 50);
-    if (!voucherCheck.ok) { showToast(voucherCheck.reason); return; }
-  }
-
-  var entries = allData[currentOrg].entries;
-  var idx = entries.findIndex(function(e){ return e.id === editingEntryId; });
-  if (idx === -1) { showToast('対象の伝票が見つかりません'); closeEditModal(); return; }
-
-  entries[idx] = Object.assign({}, entries[idx], {
-    type: type, date: date, amount: amount, desc: desc,
-    subject: subject, voucherNo: voucherNo, payment: payment,
-    updatedAt: new Date().toISOString()
-  });
-
-  saveAll();
-  closeEditModal();
-  populateYearSelects();
-  renderLedger();
-  showToast('✅ 修正しました');
 }
 
 // ============================
@@ -1815,6 +1738,180 @@ function _doShowSection(name) {
   if (name === 'report')    renderReport();
   if (name === 'settings')  { renderSubjectSettings(); renderMappingSettings(); }
   if (name !== 'settings')  settingsUnlocked = false;
+}
+
+// ============================
+//   RECEIPT AI READ
+// ============================
+var receiptPendingFiles = [];
+
+function receiptHandleFiles(files) {
+  if (!files.length) return;
+  Array.from(files).forEach(function(f) {
+    if (!receiptPendingFiles.find(function(p){ return p.name===f.name && p.size===f.size; }))
+      receiptPendingFiles.push(f);
+  });
+  var grid = document.getElementById('receiptPreviewGrid');
+  grid.innerHTML = '';
+  receiptPendingFiles.forEach(function(f) {
+    if (f.type.startsWith('image/')) {
+      var img = document.createElement('img');
+      img.className = 'receipt-preview-img';
+      img.src = URL.createObjectURL(f);
+      grid.appendChild(img);
+    } else {
+      var div = document.createElement('div');
+      div.className = 'receipt-preview-file';
+      div.textContent = f.name.split('.').pop().toUpperCase();
+      grid.appendChild(div);
+    }
+  });
+  document.getElementById('receiptReadBtn').style.display = 'inline-flex';
+  document.getElementById('receiptClearBtn').style.display = 'inline-flex';
+}
+
+function receiptClearFiles() {
+  receiptPendingFiles = [];
+  document.getElementById('receiptPreviewGrid').innerHTML = '';
+  document.getElementById('receiptFileGallery').value = '';
+  document.getElementById('receiptFileCamera').value = '';
+  document.getElementById('receiptReadBtn').style.display = 'none';
+  document.getElementById('receiptClearBtn').style.display = 'none';
+  document.getElementById('receiptStatus').style.display = 'none';
+}
+
+function receiptShowStatus(msg, type) {
+  var el = document.getElementById('receiptStatus');
+  el.className = 'receipt-status ' + type;
+  el.textContent = msg;
+  if (type === 'success') setTimeout(function(){ el.style.display='none'; }, 5000);
+}
+
+function receiptFileToBase64(file) {
+  return new Promise(function(res, rej) {
+    var r = new FileReader();
+    r.onload = function(){ res(r.result.split(',')[1]); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function receiptReadAndFill() {
+  if (!receiptPendingFiles.length) return;
+  var btn = document.getElementById('receiptReadBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="r-spinner"></span> 読み取り中...';
+  receiptShowStatus('AIがレシートを読み取っています...', 'info');
+
+  try {
+    var contentParts = [];
+    for (var i = 0; i < receiptPendingFiles.length; i++) {
+      var file = receiptPendingFiles[i];
+      var b64 = await receiptFileToBase64(file);
+      var mt = file.type || 'image/jpeg';
+      if (mt === 'application/pdf') {
+        contentParts.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});
+      } else {
+        contentParts.push({type:'image',source:{type:'base64',media_type:mt,data:b64}});
+      }
+    }
+    contentParts.push({type:'text',text:`添付された領収書・レシートから出納帳データを抽出し、JSONのみで返してください。前後に説明文やコードブロック記号を付けないこと。
+
+【金額のルール／最重要】
+・採用する金額は必ず「合計」「税込合計」「お買上計」など最終的な支払総額。
+・「お預り」「現金」「おつり」「釣り」「クレジット」「ポイント利用」の金額は絶対に採用しない。
+・数値のみ（カンマ・円記号を含めない）。
+
+【日付】記載の日付を YYYY-MM-DD で。和暦（令和等）は西暦に変換。
+
+【収支】通常の領収書・レシートは expense（支出）、income は0。会費・補助金など受領を示す書類のみ income。
+
+【勘定科目】以下の科目から最も適切なものを選んでください：
+収入科目：会費、補助金、助成金、寄付金、事業収入、受取利息、雑収入、前年度繰越金
+支出科目：消耗品費、備品費、印刷費、通信費、旅費交通費、水光熱費、修繕費、総会費、会議費、諸会議費、役員活動費、福祉厚生部費、防犯防災部費、その他事業費、慶弔費、交際費、保険料、雑費、予備費
+
+【決済方法】現金払いは "cash"、銀行振込・カード・電子マネーは "bank"。判断できない場合は "cash"。
+
+【出力形式】このJSONのみ：
+{"entries":[{"date":"YYYY-MM-DD","description":"店名や品目の要約","income":数値,"expense":数値,"subject":"勘定科目","payment":"cash または bank"}]}
+・複数枚はすべて entries に含める。`});
+
+    var resp = await fetch('https://anthropic-proxy.sakae-toyodarengou-18c.workers.dev', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        system: 'あなたはレシート解析専用のAPIです。JSONのみを返してください。説明文、コードブロック記号（```）、前後の文章は一切出力しないこと。',
+        messages: [{role:'user',content:contentParts}]
+      })
+    });
+
+    var rawText = await resp.text();
+    var data;
+    try { data = JSON.parse(rawText); } catch(e) { throw new Error('レスポンス解析失敗: ' + rawText.substring(0,100)); }
+    if (!resp.ok || data.error) throw new Error(data.error && data.error.message ? data.error.message : 'APIエラー');
+    if (!data.content || !Array.isArray(data.content)) throw new Error('予期しないレスポンス形式');
+
+    var text = data.content.map(function(c){ return c.text||''; }).join('');
+    var jsonText = text.replace(/```json|```/g,'').trim();
+    var js = jsonText.indexOf('{'), je = jsonText.lastIndexOf('}');
+    if (js !== -1 && je !== -1) jsonText = jsonText.slice(js, je+1);
+    var parsed = JSON.parse(jsonText);
+
+    if (!parsed.entries || !parsed.entries.length) {
+      receiptShowStatus('データが取得できませんでした。画像を確認してください。', 'error');
+    } else if (parsed.entries.length === 1) {
+      // 1件の場合は入力フォームに自動反映
+      var e = parsed.entries[0];
+      var type = (e.income && e.income > 0) ? 'income' : 'expense';
+      document.querySelector('input[name="type"][value="'+type+'"]').checked = true;
+      updateRadio();
+      if (e.date) document.getElementById('entryDate').value = e.date;
+      document.getElementById('entryAmount').value = type === 'income' ? (e.income||0) : (e.expense||0);
+      if (e.description) document.getElementById('entryDesc').value = e.description;
+      if (e.subject) document.getElementById('entrySubject').value = e.subject;
+      var pay = e.payment || 'cash';
+      document.querySelector('input[name="payment"][value="'+pay+'"]').checked = true;
+      updateRadio();
+      receiptClearFiles();
+      receiptShowStatus('✅ 入力欄に反映しました。内容を確認して「登録する」を押してください。', 'success');
+    } else {
+      // 複数件は確認ダイアログ→一括登録
+      var lines = parsed.entries.map(function(e, i){
+        var type = (e.income && e.income > 0) ? '収入' : '支出';
+        var amt = (e.income && e.income > 0) ? e.income : e.expense;
+        return (i+1) + '. ' + (e.date||'日付不明') + ' ' + (e.description||'') + ' ' + type + '¥' + (amt||0).toLocaleString();
+      }).join('\n');
+      showConfirmModal(
+        '以下 ' + parsed.entries.length + '件を一括登録します：\n\n' + lines + '\n\nよろしいですか？',
+        function() {
+          parsed.entries.forEach(function(e) {
+            var type = (e.income && e.income > 0) ? 'income' : 'expense';
+            var amt  = type === 'income' ? (e.income||0) : (e.expense||0);
+            var pay  = e.payment || 'cash';
+            var entry = {
+              id: Date.now().toString() + Math.random(),
+              type: type, date: e.date || new Date().toISOString().slice(0,10),
+              amount: amt, desc: e.description||'', subject: e.subject||'雑費',
+              voucherNo: '', payment: pay, createdAt: new Date().toISOString()
+            };
+            addEntry(entry);
+          });
+          populateYearSelects();
+          receiptClearFiles();
+          showToast('✅ ' + parsed.entries.length + '件を登録しました');
+          showSection('ledger');
+        },
+        '一括登録する', 'var(--navy)'
+      );
+    }
+  } catch(err) {
+    receiptShowStatus('❌ エラー: ' + err.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>✨</span> AIで読み取って入力欄に反映';
 }
 
 // ============================
