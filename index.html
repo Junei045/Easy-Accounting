@@ -1258,6 +1258,7 @@ function populateYearSelects() {
   var years = getFiscalYears();
   ['filterYear','monthlyYear','subjectYear','reportYear'].forEach(function(id) {
     var sel = document.getElementById(id);
+    var prevValue = sel.value; // 再描画前に選ばれていた年度を記憶
     sel.innerHTML = '<option value="">年度を選択</option>';
     years.forEach(function(y) {
       var opt = document.createElement('option');
@@ -1265,7 +1266,13 @@ function populateYearSelects() {
       opt.textContent = getYearLabel(y);
       sel.appendChild(opt);
     });
-    if (years.length > 0) sel.value = years[0];
+    if (prevValue && years.indexOf(prevValue) !== -1) {
+      // これまで選んでいた年度が引き続き存在するなら、それを維持する
+      sel.value = prevValue;
+    } else if (years.length > 0) {
+      // 初回表示時や、選んでいた年度が無くなった場合のみ先頭年度を選ぶ
+      sel.value = years[0];
+    }
   });
 }
 
