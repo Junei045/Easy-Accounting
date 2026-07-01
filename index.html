@@ -248,7 +248,21 @@
   }
   .badge-bank { background: #dce8f8; color: var(--navy); }
   .badge-cash { background: #fdf3d0; color: #8a6020; }
+  .badge-transfer { background: #e8e0f0; color: #5a3a80; }
   .balance-row { background: var(--bg2) !important; font-weight: 700; }
+
+  /* ===== TRANSFER (資金移動) ===== */
+  .transfer-link-btn {
+    display: block; width: 100%; text-align: center; margin-top: 10px;
+    padding: 11px; border: 1.5px dashed #9070b0; border-radius: 10px;
+    background: #f5f0fa; color: #5a3a80; font-family: inherit; font-size: 13px;
+    font-weight: 600; cursor: pointer;
+  }
+  .transfer-link-btn:hover { background: #ece0f5; }
+  .transfer-note-box {
+    background: #f5f0fa; border: 1px solid #d8c8ea; border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; color: #5a3a80; margin-top: 10px; line-height: 1.7;
+  }
 
   /* ===== SUMMARY ===== */
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -543,6 +557,7 @@
         </div>
 
         <button class="submit-btn" onclick="submitEntry()">✅ 登録する</button>
+        <button type="button" class="transfer-link-btn" onclick="openTransferModal()">🔄 口座⇔現金の資金移動（引出・預入）はこちら</button>
       </div><!-- /取引入力card -->
     </div>
 
@@ -681,6 +696,12 @@
       </div>
       <div class="card">
         <div class="card-title">🗂️ データ管理</div>
+        <div style="margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">🔄 資金移動 整合性チェック（検算）</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">口座⇔現金の資金移動伝票がペアで正しく記録されているかを確認します。</p>
+          <button onclick="validateTransfers()" style="padding:11px 18px;background:#5a3a80;color:white;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">🔍 資金移動の整合性をチェックする</button>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin-bottom:16px;">
         <div style="margin-bottom:20px;">
           <div style="font-weight:600;margin-bottom:8px;font-size:14px;">📤 CSVインポート（担当者引き継ぎ・端末移行）</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
@@ -767,6 +788,45 @@
     <div style="display:flex;gap:10px;margin-top:8px;">
       <button onclick="closeEditModal()" style="flex:1;padding:13px;border:2px solid #d0c8b8;background:#f4f1eb;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;color:#5a5550;font-weight:600;">キャンセル</button>
       <button onclick="saveEditEntry()" style="flex:1;padding:13px;border:none;background:var(--navy);color:white;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;font-weight:700;">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TRANSFER (資金移動) MODAL ===== -->
+<div id="transferModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:24px;overflow-y:auto;">
+  <div style="background:white;border-radius:16px;padding:24px 20px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);margin:auto;">
+    <h3 style="text-align:center;color:#5a3a80;margin-bottom:4px;font-size:17px;">🔄 資金移動（口座⇔現金）</h3>
+    <p style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:16px;">銀行口座と現金の間でお金を移動した記録です。<br>収入・支出には計上されません（決算書では集計除外）。</p>
+    <div class="form-row">
+      <label>移動の方向</label>
+      <div class="radio-group">
+        <label class="radio-label bank checked" id="lbl-tr-withdraw">
+          <input type="radio" name="transferDir" value="withdraw" checked onchange="updateTransferRadio()"> 🏦→💴 引出（口座→現金）
+        </label>
+        <label class="radio-label cash" id="lbl-tr-deposit">
+          <input type="radio" name="transferDir" value="deposit" onchange="updateTransferRadio()"> 💴→🏦 預入（現金→口座）
+        </label>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>日付</label>
+      <input type="date" id="transferDate">
+    </div>
+    <div class="form-row amount">
+      <label>金額（円）</label>
+      <input type="number" id="transferAmount" placeholder="0" min="0" inputmode="numeric">
+    </div>
+    <div class="form-row">
+      <label>摘要（任意）</label>
+      <input type="text" id="transferDesc" placeholder="例：釣銭準備金の引出">
+    </div>
+    <div class="form-row">
+      <label>伝票番号（任意）</label>
+      <input type="text" id="transferVoucherNo">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button onclick="closeTransferModal()" style="flex:1;padding:13px;border:2px solid #d0c8b8;background:#f4f1eb;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;color:#5a5550;font-weight:600;">キャンセル</button>
+      <button onclick="submitTransfer()" style="flex:1;padding:13px;border:none;background:#5a3a80;color:white;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;font-weight:700;">登録する</button>
     </div>
   </div>
 </div>
@@ -968,14 +1028,28 @@ function hideVoiceStatus() {
 //   SUBJECTS
 // ============================
 var DEFAULT_SUBJECTS = {
-  income: ['前年度繰越金','会費','補助金','助成金','寄付金','事業収入','受取利息','雑収入'],
-  expense: ['消耗品費','備品費','印刷費','通信費','旅費交通費','水光熱費','修繕費','総会費','会議費','諸会議費','区スポーツ協会費','区更生保護','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','助成金','その他事業費','慶弔費','交際費','助成金戻入金','保険料','雑費','予備費','次年度繰越','積立金']
+  income: ['前年度繰越金','会費','補助金','助成金','寄付金','事業収入','受取利息','雑収入','口座→現金振替','現金→口座振替'],
+  expense: ['消耗品費','備品費','印刷費','通信費','旅費交通費','水光熱費','修繕費','総会費','会議費','諸会議費','区スポーツ協会費','区更生保護','栄防犯協会費','その他会費分担金','総務部費','役員活動費','福祉厚生部費','防犯防災部費','助成金','その他事業費','慶弔費','交際費','助成金戻入金','保険料','雑費','予備費','次年度繰越','積立金','口座→現金振替','現金→口座振替']
 };
+
+// 「口座→現金振替」「現金→口座振替」は資金移動専用の科目。
+// 通常の収入・支出とは異なり、決算書の集計からは除外する（二重計上防止）。
+var TRANSFER_SUBJECTS = ['口座→現金振替','現金→口座振替'];
+function isTransferSubject(name) { return TRANSFER_SUBJECTS.indexOf(name) !== -1; }
 
 function getSubjects() {
   var key = 'subjects_' + currentOrg;
   var raw = localStorage.getItem(key);
-  return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+  var subs = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+  // 既存データにも資金移動科目を自動的に補完する（マイグレーション）
+  var changed = false;
+  ['income','expense'].forEach(function(type) {
+    TRANSFER_SUBJECTS.forEach(function(t) {
+      if (subs[type].indexOf(t) === -1) { subs[type].push(t); changed = true; }
+    });
+  });
+  if (changed) saveSubjects(subs);
+  return subs;
 }
 function saveSubjects(subs) {
   localStorage.setItem('subjects_' + currentOrg, JSON.stringify(subs));
@@ -998,13 +1072,17 @@ function renderSubjectSettings() {
   ['income','expense'].forEach(function(type) {
     var div = document.getElementById(type + 'SubjectList');
     if (!div) return;
-    div.innerHTML = subs[type].map(function(s, i) { return (
+    div.innerHTML = subs[type].map(function(s, i) {
+      var protected_ = isTransferSubject(s);
+      return (
       '<div style="display:flex;align-items:center;justify-content:space-between;' +
       'padding:7px 10px;border:1px solid var(--border);border-radius:8px;' +
-      'margin-bottom:6px;background:var(--bg);font-size:14px;">' +
-      '<span>' + s + '</span>' +
-      '<button data-type="' + type + '" data-idx="' + i + '" class="sub-del-btn"' +
-      ' style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 8px;line-height:1;">✕</button>' +
+      'margin-bottom:6px;background:' + (protected_ ? '#f5f0fa' : 'var(--bg)') + ';font-size:14px;">' +
+      '<span>' + s + (protected_ ? ' <span style="font-size:11px;color:#5a3a80;">🔒資金移動用</span>' : '') + '</span>' +
+      (protected_
+        ? '<span style="font-size:11px;color:var(--text2);padding:4px 8px;">削除不可</span>'
+        : '<button data-type="' + type + '" data-idx="' + i + '" class="sub-del-btn"' +
+          ' style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 8px;line-height:1;">✕</button>') +
       '</div>');
     }).join('');
   });
@@ -1273,11 +1351,132 @@ function doRegisterEntry(type, date, amount, desc, subject, voucherNo, payment) 
 }
 
 function clearForm() {
+
   document.getElementById('entryAmount').value = '';
+
   document.getElementById('entryDesc').value = '';
+
   document.getElementById('entrySubject').value = '';
+
   document.getElementById('entryVoucherNo').value = '';
+
   setTodayDate();
+
+}
+
+
+// ============================
+//   TRANSFER\uff08\u53e3\u5ea7\u21d4\u73fe\u91d1 \u8cc7\u91d1\u79fb\u52d5\uff09
+// ============================
+// \u8cc7\u91d1\u79fb\u52d5\u306f\u300c\u53e3\u5ea7\u304b\u3089\u306e\u51fa\u91d1\u300d\u3068\u300c\u73fe\u91d1\u3078\u306e\u5165\u91d1\u300d\uff08\u307e\u305f\u306f\u305d\u306e\u9006\uff09\u306e
+// 2\u679a\u306e\u4f1d\u7968\u3092\u5fc5\u305a\u30da\u30a2\u3067\u4f5c\u6210\u3059\u308b\u3002\u79d1\u76ee\u306f\u96c6\u8a08\u9664\u5916\u306e
+// \u5c02\u7528\u79d1\u76ee\u3092\u4f7f\u3046\u305f\u3081\u3001\u6c7a\u7b97\u66f8\u30fb\u79d1\u76ee\u5225\u96c6\u8a08\u30fb\u6a2a\u6d5c\u5e02\u5831\u544a\u66f8\u306e
+// \u5b9f\u8cea\u53ce\u652f\u306b\u306f\u5f71\u97ff\u3057\u306a\u3044\u3002
+function openTransferModal() {
+  document.getElementById('transferDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('transferAmount').value = '';
+  document.getElementById('transferDesc').value = '';
+  document.getElementById('transferVoucherNo').value = '';
+  document.querySelector('input[name="transferDir"][value="withdraw"]').checked = true;
+  updateTransferRadio();
+  document.getElementById('transferModal').style.display = 'flex';
+}
+function closeTransferModal() {
+  document.getElementById('transferModal').style.display = 'none';
+}
+function updateTransferRadio() {
+  var dir = document.querySelector('input[name="transferDir"]:checked') && document.querySelector('input[name="transferDir"]:checked').value;
+  document.getElementById('lbl-tr-withdraw').classList.toggle('checked', dir === 'withdraw');
+  document.getElementById('lbl-tr-deposit').classList.toggle('checked', dir === 'deposit');
+}
+function submitTransfer() {
+  var dir       = document.querySelector('input[name="transferDir"]:checked') && document.querySelector('input[name="transferDir"]:checked').value;
+  var date      = document.getElementById('transferDate').value;
+  var amount    = parseInt(document.getElementById('transferAmount').value);
+  var desc      = document.getElementById('transferDesc').value.trim();
+  var voucherNo = document.getElementById('transferVoucherNo').value.trim();
+
+  if (!checkSubmitRate('transferForm', 6, 60000)) {
+    showToast('\u26a0\ufe0f \u77ed\u6642\u9593\u306b\u591a\u304f\u306e\u767b\u9332\u304c\u884c\u308f\u308c\u3066\u3044\u307e\u3059\u3002\u5c11\u3057\u5f85\u3063\u3066\u304b\u3089\u518d\u8a66\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002');
+    return;
+  }
+  if (!date) { showToast('\u65e5\u4ed8\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044'); return; }
+  if (!amount || amount <= 0) { showToast('\u91d1\u984d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044'); return; }
+  var descCheck = validateInput(desc, '\u6458\u8981', 200);
+  if (!descCheck.ok) { showToast(descCheck.reason); return; }
+  if (voucherNo) {
+    var voucherCheck = validateInput(voucherNo, '\u4f1d\u7968\u756a\u53f7', 50);
+    if (!voucherCheck.ok) { showToast(voucherCheck.reason); return; }
+  }
+
+  var subject   = dir === 'withdraw' ? '\u53e3\u5ea7\u2192\u73fe\u91d1\u632f\u66ff' : '\u73fe\u91d1\u2192\u53e3\u5ea7\u632f\u66ff';
+  var fromPay   = dir === 'withdraw' ? 'bank' : 'cash';
+  var toPay     = dir === 'withdraw' ? 'cash' : 'bank';
+  var autoDesc  = desc || (dir === 'withdraw' ? '\u53e3\u5ea7\u304b\u3089\u73fe\u91d1\u3078\u306e\u632f\u66ff\uff08\u5f15\u51fa\uff09' : '\u73fe\u91d1\u304b\u3089\u53e3\u5ea7\u3078\u306e\u632f\u66ff\uff08\u9810\u5165\uff09');
+  var transferId = 'tr_' + Date.now().toString() + '_' + Math.random().toString(36).slice(2,8);
+  var now = new Date().toISOString();
+
+  var legOut = {
+    id: Date.now().toString() + '_out', type: 'expense', date: date, amount: amount,
+    desc: autoDesc, subject: subject, voucherNo: voucherNo, payment: fromPay,
+    transferId: transferId, createdAt: now
+  };
+  var legIn = {
+    id: Date.now().toString() + '_in', type: 'income', date: date, amount: amount,
+    desc: autoDesc, subject: subject, voucherNo: voucherNo, payment: toPay,
+    transferId: transferId, createdAt: now
+  };
+  addEntry(legOut);
+  addEntry(legIn);
+  populateYearSelects();
+  closeTransferModal();
+  renderLedger();
+  showToast('\u2705 \u8cc7\u91d1\u79fb\u52d5\u3092\u767b\u9332\u3057\u307e\u3057\u305f\uff08\u53e3\u5ea7\u30fb\u73fe\u91d1\u305d\u308c\u305e\u308c\u306b\u4f1d\u7968\u3092\u4f5c\u6210\uff09');
+}
+
+// ============================
+//   TRANSFER \u6574\u5408\u6027\u30c1\u30a7\u30c3\u30af\uff08\u691c\u7b97\uff09
+// ============================
+function validateTransfers() {
+  var entries = getEntries().filter(function(e){ return e.transferId; });
+  var groups = {};
+  entries.forEach(function(e) {
+    if (!groups[e.transferId]) groups[e.transferId] = [];
+    groups[e.transferId].push(e);
+  });
+  var issues = [];
+  Object.keys(groups).forEach(function(tid) {
+    var g = groups[tid];
+    if (g.length !== 2) {
+      issues.push('\u4f1d\u7968\u30da\u30a2\u4e0d\u4e00\u81f4\uff08' + g.length + '\u4ef6\uff09\uff1a' + (g[0] ? g[0].date + ' ' + g[0].desc : tid));
+      return;
+    }
+    var out = g.find(function(e){ return e.type === 'expense'; });
+    var inn = g.find(function(e){ return e.type === 'income'; });
+    if (!out || !inn) {
+      issues.push('\u53ce\u5165\u30fb\u652f\u51fa\u306e\u7d44\u307f\u5408\u308f\u305b\u304c\u4e0d\u6b63\uff1a' + g[0].date + ' ' + g[0].desc);
+      return;
+    }
+    if (out.amount !== inn.amount) {
+      issues.push('\u91d1\u984d\u4e0d\u4e00\u81f4\uff1a' + out.date + ' ' + out.desc + '\uff08\u51fa\u91d1\uffe5' + out.amount.toLocaleString() + ' / \u5165\u91d1\uffe5' + inn.amount.toLocaleString() + '\uff09');
+      return;
+    }
+    if (out.payment === inn.payment) {
+      issues.push('\u79fb\u52d5\u5148\u304c\u540c\u3058\u6c7a\u6e08\u65b9\u6cd5\u306b\u306a\u3063\u3066\u3044\u307e\u3059\uff1a' + out.date + ' ' + out.desc);
+    }
+  });
+  var totalTransferAmt = entries.filter(function(e){ return e.type === 'expense'; }).reduce(function(s,e){ return s+e.amount; }, 0);
+  if (issues.length === 0) {
+    showConfirmModal(
+      '\u2705 \u8cc7\u91d1\u79fb\u52d5\u306e\u6574\u5408\u6027\u30c1\u30a7\u30c3\u30af\u5b8c\u4e86\\n\\n\u7570\u5e38\u306f\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f\u3002\\n\uff08\u8cc7\u91d1\u79fb\u52d5\u30da\u30a2\uff1a' + Object.keys(groups).length + '\u7d44\uff0f\u7d2f\u8a08\uffe5' + totalTransferAmt.toLocaleString() + '\uff09',
+      function(){}, '\u9589\u3058\u308b', 'var(--navy)'
+    );
+  } else {
+    showConfirmModal(
+      '\u26a0\ufe0f \u8cc7\u91d1\u79fb\u52d5\u306e\u6574\u5408\u6027\u30c1\u30a7\u30c3\u30af\u3067\u554f\u984c\u304c\u898b\u3064\u304b\u308a\u307e\u3057\u305f\\n\\n' + issues.join('\\n') + '\\n\\n\u8a72\u5f53\u306e\u4f1d\u7968\u3092\u51fa\u7d0d\u5e33\u304b\u3089\u78ba\u8a8d\u30fb\u4fee\u6b63\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+      function(){}, '\u9589\u3058\u308b', '#c0392b'
+    );
+  }
 }
 
 // ============================
@@ -1336,18 +1535,22 @@ function renderLedger() {
     var inc = e.type === 'income' ? e.amount : 0;
     var exp = e.type === 'expense' ? e.amount : 0;
     balance += inc - exp;
+    var isTransfer = !!e.transferId;
+    var subjectCell = e.subject + (isTransfer ? ' <span class="badge badge-transfer">🔄振替</span>' : '');
+    var actionCell = isTransfer
+      ? '<span style="font-size:11px;color:var(--text2);padding:4px 6px;" title="資金移動の伝票は編集できません。削除する場合は対の伝票も一緒に削除されます。">編集不可</span>' +
+        '<button onclick="confirmDelete(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:18px;padding:4px 6px;">🗑️</button>'
+      : '<button onclick="openEditModal(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--navy);font-size:18px;padding:4px 6px;">✏️</button>' +
+        '<button onclick="confirmDelete(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:18px;padding:4px 6px;">🗑️</button>';
     html += '<tr>' +
       '<td>' + e.date + '</td>' +
       '<td>' + e.desc + '</td>' +
-      '<td>' + e.subject + '</td>' +
+      '<td>' + subjectCell + '</td>' +
       '<td>' + (e.voucherNo || '') + '</td>' +
       '<td class="text-right ' + (e.type==='income'?'amount-income':'') + '">' + (inc?'¥'+inc.toLocaleString():'') + '</td>' +
       '<td class="text-right ' + (e.type==='expense'?'amount-expense':'') + '">' + (exp?'¥'+exp.toLocaleString():'') + '</td>' +
       '<td class="text-right">' + (balance<0?'△':'') + '<strong>¥' + Math.abs(balance).toLocaleString() + '</strong></td>' +
-      '<td class="no-print" style="white-space:nowrap;">' +
-        '<button onclick="openEditModal(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--navy);font-size:18px;padding:4px 6px;">✏️</button>' +
-        '<button onclick="confirmDelete(\'' + e.id + '\')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:18px;padding:4px 6px;">🗑️</button>' +
-      '</td>' +
+      '<td class="no-print" style="white-space:nowrap;">' + actionCell + '</td>' +
       '</tr>';
   });
   html += '</tbody></table>';
@@ -1357,6 +1560,19 @@ function renderLedger() {
 function confirmDelete(id) {
   var entry = getEntries().find(function(e){ return e.id === id; });
   if (!entry) return;
+  if (entry.transferId) {
+    var pair = getEntries().filter(function(e){ return e.transferId === entry.transferId; });
+    showConfirmModal(
+      'この伝票は資金移動（口座⇔現金）のペアの一部です。\n削除すると対になる伝票も一緒に削除されます。\n\n日付：' + entry.date + '\n摘要：' + entry.desc + '\n金額：¥' + entry.amount.toLocaleString() + '\n（' + pair.length + '件を削除）',
+      function() {
+        allData[currentOrg].entries = allData[currentOrg].entries.filter(function(e){ return e.transferId !== entry.transferId; });
+        saveAll();
+        renderLedger();
+        showToast('🗑️ 資金移動のペアを削除しました');
+      }, '削除する'
+    );
+    return;
+  }
   showConfirmModal(
     'この伝票を削除しますか？\n\n日付：' + entry.date + '\n摘要：' + entry.desc + '\n金額：¥' + entry.amount.toLocaleString(),
     function() {
@@ -1457,7 +1673,11 @@ var MONTH_LABELS = ['4月','5月','6月','7月','8月','9月','10月','11月','1
 function renderMonthly() {
   var year = document.getElementById('monthlyYear') && document.getElementById('monthlyYear').value;
   if (!year) return;
-  var entries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
+  var allEntries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
+  // 資金移動科目は月別集計から除外（実質収支のみ表示）
+  var entries = allEntries.filter(function(e){ return !isTransferSubject(e.subject); });
+  var transferTotal = allEntries.filter(function(e){ return isTransferSubject(e.subject) && e.type === 'expense'; })
+    .reduce(function(s,e){ return s+e.amount; }, 0);
   var totalInc = 0, totalExp = 0;
   var rows = MONTHS.map(function(m, i) {
     var me  = entries.filter(function(e){ return new Date(e.date).getMonth()+1 === m; });
@@ -1467,6 +1687,9 @@ function renderMonthly() {
     return { label: MONTH_LABELS[i], inc: inc, exp: exp, bal: inc - exp };
   });
   var totalBal = totalInc - totalExp;
+  var transferNote = transferTotal > 0
+    ? '<div class="transfer-note-box">🔄 口座⇔現金の資金移動：¥' + transferTotal.toLocaleString() + '（上記の収支には含まれていません）</div>'
+    : '';
   document.getElementById('monthlySummary').innerHTML =
     '<div class="summary-grid">' +
     '<div class="summary-card income"><div class="label">年度収入合計</div><div class="value">¥' + totalInc.toLocaleString() + '</div></div>' +
@@ -1486,7 +1709,7 @@ function renderMonthly() {
     '<td class="text-right amount-expense">¥' + totalExp.toLocaleString() + '</td>' +
     '<td class="text-right" style="font-weight:700;color:' + (totalBal>=0?'var(--green)':'var(--red)') + '">' +
     (totalBal<0?'△':'') + '¥' + Math.abs(totalBal).toLocaleString() + '</td></tr>' +
-    '</tbody></table></div>';
+    '</tbody></table></div>' + transferNote;
 }
 
 // ============================
@@ -1497,7 +1720,12 @@ function renderSubject() {
   if (!year) return;
   var entries = getEntries().filter(function(e){ return getFiscalYear(e.date) == year; });
   var subjects = {};
+  var transferTotal = 0;
   entries.forEach(function(e) {
+    if (isTransferSubject(e.subject)) {
+      if (e.type === 'expense') transferTotal += e.amount; // 出金側のみ集計（1回の移動を二重計上しない）
+      return;
+    }
     if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
     if (e.type === 'income') subjects[e.subject].income += e.amount;
     else subjects[e.subject].expense += e.amount;
@@ -1506,6 +1734,9 @@ function renderSubject() {
   var expSubs  = Object.entries(subjects).filter(function(kv){ return kv[1].expense > 0; });
   var totalInc = incSubs.reduce(function(s,kv){ return s+kv[1].income; }, 0);
   var totalExp = expSubs.reduce(function(s,kv){ return s+kv[1].expense; }, 0);
+  var transferNote = transferTotal > 0
+    ? '<div class="transfer-note-box">🔄 口座⇔現金の資金移動：<strong>¥' + transferTotal.toLocaleString() + '</strong>（実質収支には含まれません／集計除外）</div>'
+    : '';
   document.getElementById('subjectSummary').innerHTML =
     '<div class="report-section"><h3>📈 収入科目別</h3><div class="ledger-table"><table class="report-table">' +
     '<thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead><tbody>' +
@@ -1516,7 +1747,7 @@ function renderSubject() {
     '<thead><tr><th>科目</th><th class="text-right">金額</th><th class="text-right">構成比</th></tr></thead><tbody>' +
     expSubs.map(function(kv){ return '<tr><td>' + kv[0] + '</td><td class="text-right amount-expense">¥' + kv[1].expense.toLocaleString() + '</td><td class="text-right">' + (totalExp?Math.round(kv[1].expense/totalExp*100):0) + '%</td></tr>'; }).join('') +
     '<tr class="subtotal"><td>合計</td><td class="text-right amount-expense">¥' + totalExp.toLocaleString() + '</td><td></td></tr>' +
-    '</tbody></table></div></div>';
+    '</tbody></table></div></div>' + transferNote;
 }
 
 // ============================
@@ -1532,7 +1763,12 @@ function renderReport() {
 
   var orgName  = allData[currentOrg] && allData[currentOrg].orgName ? allData[currentOrg].orgName : '';
   var subjects = {};
+  var transferTotal = 0;
   entries.forEach(function(e) {
+    if (isTransferSubject(e.subject)) {
+      if (e.type === 'expense') transferTotal += e.amount;
+      return;
+    }
     if (!subjects[e.subject]) subjects[e.subject] = { income:0, expense:0 };
     if (e.type === 'income') subjects[e.subject].income += e.amount;
     else subjects[e.subject].expense += e.amount;
@@ -1542,6 +1778,9 @@ function renderReport() {
   var totalInc = incSubs.reduce(function(s,kv){ return s+kv[1].income; }, 0);
   var totalExp = expSubs.reduce(function(s,kv){ return s+kv[1].expense; }, 0);
   var balance  = totalInc - totalExp;
+  var transferNote = transferTotal > 0
+    ? '<div class="transfer-note-box">※口座⇔現金の資金移動：¥' + transferTotal.toLocaleString() + '（上記の収入・支出合計には含まれていません）</div>'
+    : '';
 
   document.getElementById('reportContent').innerHTML =
     '<div class="report-header"><h2>' + orgName + '</h2><h2>' + year + '年度　決算報告書</h2><p>会計年度：' + year + '年4月1日 〜 ' + (+year+1) + '年3月31日</p></div>' +
@@ -1556,6 +1795,7 @@ function renderReport() {
     '<tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right">-</td><td class="text-right amount-expense"><strong>¥' + totalExp.toLocaleString() + '</strong></td><td></td></tr>' +
     '</tbody></table></div></div>' +
     '<div class="ledger-table"><table class="report-table"><tr class="total"><td><strong>【収支差額】（収入合計 − 支出合計）</strong></td><td class="text-right"><strong>' + (balance<0?'△':'') + '¥' + Math.abs(balance).toLocaleString() + '</strong></td></tr></table></div>' +
+    transferNote +
     '<div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">以上のとおり' + year + '年度の会計を報告いたします。<br><br><div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px"><span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span><span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span></div></div>';
 }
 
@@ -1578,8 +1818,8 @@ function saveMapping(map) {
 function renderMappingSettings() {
   var subs     = getSubjects();
   var mapping  = getMapping();
-  var allMySubs = subs.income.map(function(s){ return { name:s, type:'income' }; })
-    .concat(subs.expense.map(function(s){ return { name:s, type:'expense' }; }));
+  var allMySubs = subs.income.filter(function(s){ return !isTransferSubject(s); }).map(function(s){ return { name:s, type:'income' }; })
+    .concat(subs.expense.filter(function(s){ return !isTransferSubject(s); }).map(function(s){ return { name:s, type:'expense' }; }));
   var mappedCount = allMySubs.filter(function(s){ return mapping[s.name]; }).length;
   var total = allMySubs.length;
 
@@ -1633,7 +1873,9 @@ function renderYokoReport(year, entries) {
     yokoTotals[yokoSubject] += e.type === 'income' ? e.amount : -e.amount;
   });
   var usedSubjects = Array.from(new Set(entries.map(function(e){ return e.subject; })));
-  var unmapped = usedSubjects.filter(function(s){ return !mapping[s]; });
+  var unmapped = usedSubjects.filter(function(s){ return !mapping[s] && !isTransferSubject(s); });
+  var transferTotal = entries.filter(function(e){ return isTransferSubject(e.subject) && e.type === 'expense'; })
+    .reduce(function(s,e){ return s+e.amount; }, 0);
 
   var incomeList  = YOKO_SUBJECTS.income;
   var expenseList = YOKO_SUBJECTS.expense;
@@ -1680,6 +1922,7 @@ function renderYokoReport(year, entries) {
     '<tr class="subtotal"><td><strong>支出合計</strong></td><td class="text-right amount-expense"><strong>¥' + totalExpCalc.toLocaleString() + '</strong></td></tr>' +
     '</tbody></table></div></div>' +
     '<div class="ledger-table"><table class="report-table"><tr class="total"><td><strong>【収支差額】（収入合計 − 支出合計）</strong></td><td class="text-right"><strong>' + (balance<0?'△':'') + '¥' + Math.abs(balance).toLocaleString() + '</strong></td></tr></table></div>' +
+    (transferTotal > 0 ? '<div class="transfer-note-box">※口座⇔現金の資金移動：¥' + transferTotal.toLocaleString() + '（上記には含まれていません）</div>' : '') +
     unmappedHtml +
     '<div style="margin-top:32px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2)">以上のとおり' + year + '年度の会計を報告いたします。<br><br><div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:12px"><span>会計責任者：＿＿＿＿＿＿＿＿＿＿　㊞</span><span>監査者：＿＿＿＿＿＿＿＿＿＿　㊞</span></div></div>';
 }
@@ -1705,7 +1948,7 @@ function importCSV(input) {
         date: header.indexOf('日付'), desc: header.indexOf('摘要'),
         subject: header.indexOf('勘定科目'), voucherNo: header.indexOf('伝票番号'),
         income: header.indexOf('収入'), expense: header.indexOf('支出'),
-        payment: header.indexOf('決済方法')
+        payment: header.indexOf('決済方法'), transferId: header.indexOf('振替ID')
       };
 
       var existing    = getEntries();
@@ -1742,11 +1985,14 @@ function importCSV(input) {
         var type    = incomeAmt > 0 ? 'income' : 'expense';
         var amount  = incomeAmt > 0 ? incomeAmt : expenseAmt;
         var payment = paymentStr === '銀行口座' ? 'bank' : 'cash';
+        var transferId = idx.transferId >= 0 ? get(idx.transferId) : '';
         var key     = normalizedDate + '_' + desc + '_' + amount + '_' + type;
         if (existingKeys.has(key)) { skipped++; return; }
         existingKeys.add(key);
-        newEntries.push({ id: Date.now() + Math.random(), date: normalizedDate, desc: desc,
-          subject: subject||'その他', voucherNo: voucherNo, type: type, amount: amount, payment: payment });
+        var entry = { id: Date.now() + Math.random(), date: normalizedDate, desc: desc,
+          subject: subject||'その他', voucherNo: voucherNo, type: type, amount: amount, payment: payment };
+        if (transferId) entry.transferId = transferId;
+        newEntries.push(entry);
         added++;
       });
 
@@ -1788,11 +2034,12 @@ function exportCSV() {
   var entries = getEntries();
   if (year) entries = entries.filter(function(e){ return getFiscalYear(e.date) == year; });
   entries.sort(function(a,b){ return a.date.localeCompare(b.date); });
-  var header = ['日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別'];
+  var header = ['日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別','振替ID'];
   var rows = entries.map(function(e){ return [
     e.date, e.desc, e.subject, e.voucherNo||'',
     e.type==='income'?e.amount:'', e.type==='expense'?e.amount:'',
-    e.payment==='bank'?'銀行口座':'現金', e.type==='income'?'収入':'支出'
+    e.payment==='bank'?'銀行口座':'現金', e.type==='income'?'収入':'支出',
+    e.transferId||''
   ]; });
   var csv  = [header].concat(rows).map(function(r){ return r.map(function(c){ return '"'+c+'"'; }).join(','); }).join('\n');
   var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
@@ -1957,6 +2204,7 @@ async function receiptReadAndFill() {
 【勘定科目】以下の科目から最も適切なものを選んでください：
 収入科目：会費、補助金、助成金、寄付金、事業収入、受取利息、雑収入、前年度繰越金
 支出科目：消耗品費、備品費、印刷費、通信費、旅費交通費、水光熱費、修繕費、総会費、会議費、諸会議費、役員活動費、福祉厚生部費、防犯防災部費、その他事業費、慶弔費、交際費、保険料、雑費、予備費
+※口座↔現金の引出・預入は「口座→現金振替」「現金→口座振替」には分類しないこと。それらはAI読取ではなく資金移動ボタンから別途入力する。
 
 【決済方法】現金払いは "cash"、銀行振込・カード・電子マネーは "bank"。判断できない場合は "cash"。
 
