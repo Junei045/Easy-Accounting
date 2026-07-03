@@ -1565,7 +1565,7 @@ function renderLedger() {
 }
 
 function confirmDelete(id) {
-  var entry = getEntries().find(function(e){ return e.id === id; });
+  var entry = getEntries().find(function(e){ return String(e.id) === String(id); });
   if (!entry) return;
   if (entry.transferId) {
     var pair = getEntries().filter(function(e){ return e.transferId === entry.transferId; });
@@ -1583,7 +1583,7 @@ function confirmDelete(id) {
   showConfirmModal(
     'この伝票を削除しますか？\n\n日付：' + entry.date + '\n摘要：' + entry.desc + '\n金額：¥' + entry.amount.toLocaleString(),
     function() {
-      allData[currentOrg].entries = allData[currentOrg].entries.filter(function(e){ return e.id !== id; });
+      allData[currentOrg].entries = allData[currentOrg].entries.filter(function(e){ return String(e.id) !== String(id); });
       saveAll();
       renderLedger();
       showToast('🗑️ 削除しました');
@@ -1614,7 +1614,7 @@ function updateEditRadio() {
 }
 
 function openEditModal(id) {
-  var entry = getEntries().find(function(e){ return e.id === id; });
+  var entry = getEntries().find(function(e){ return String(e.id) === String(id); });
   if (!entry) return;
   editingEntryId = id;
   rebuildEditSubjectSelect();
@@ -1657,7 +1657,7 @@ function saveEditEntry() {
     if (!voucherCheck.ok) { showToast(voucherCheck.reason); return; }
   }
   var entries = allData[currentOrg].entries;
-  var idx = entries.findIndex(function(e){ return e.id === editingEntryId; });
+  var idx = entries.findIndex(function(e){ return String(e.id) === String(editingEntryId); });
   if (idx === -1) { showToast('対象の伝票が見つかりません'); closeEditModal(); return; }
   entries[idx] = Object.assign({}, entries[idx], {
     type: type, date: date, amount: amount, desc: desc,
