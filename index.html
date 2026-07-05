@@ -1328,7 +1328,22 @@ function submitEntry() {
     if (!voucherCheck.ok) { showToast(voucherCheck.reason); return; }
   }
 
-  // ⑤ 科目矛盾チェック（既存ロジック）
+  // ⑤ 年号確認チェック（AI誤読・手入力ミスどちらも対象）
+  if (isSuspiciousYear(date)) {
+    var currentYear = new Date().getFullYear();
+    showConfirmModal(
+      '⚠️ 日付「' + date + '」の年号が現在（' + currentYear + '年）と大きく離れています。\n\n入力ミス（年号の誤字・AI誤読など）の可能性があります。\n\nこのまま登録しますか？',
+      function(){ checkSubjectAndRegister(type, date, amount, desc, subject, voucherNo, payment); },
+      '年号を確認した上で登録する', '#c0392b'
+    );
+    return;
+  }
+
+  checkSubjectAndRegister(type, date, amount, desc, subject, voucherNo, payment);
+}
+
+// ⑥ 科目矛盾チェック（既存ロジック）
+function checkSubjectAndRegister(type, date, amount, desc, subject, voucherNo, payment) {
   var subjectType = getSubjectType(subject);
   if (subjectType && subjectType !== type) {
     var typeLabel        = type === 'income' ? '収入' : '支出';
@@ -1656,6 +1671,22 @@ function saveEditEntry() {
     var voucherCheck = validateInput(voucherNo, '伝票番号', 50);
     if (!voucherCheck.ok) { showToast(voucherCheck.reason); return; }
   }
+
+  // 年号確認チェック（AI誤読・手入力ミスどちらも対象）
+  if (isSuspiciousYear(date)) {
+    var currentYear = new Date().getFullYear();
+    showConfirmModal(
+      '⚠️ 日付「' + date + '」の年号が現在（' + currentYear + '年）と大きく離れています。\n\n入力ミス（年号の誤字など）の可能性があります。\n\nこのまま修正内容を保存しますか？',
+      function(){ doSaveEditEntry(type, date, amount, desc, subject, voucherNo, payment); },
+      '年号を確認した上で保存する', '#c0392b'
+    );
+    return;
+  }
+
+  doSaveEditEntry(type, date, amount, desc, subject, voucherNo, payment);
+}
+
+function doSaveEditEntry(type, date, amount, desc, subject, voucherNo, payment) {
   var entries = allData[currentOrg].entries;
   var idx = entries.findIndex(function(e){ return String(e.id) === String(editingEntryId); });
   if (idx === -1) { showToast('対象の伝票が見つかりません'); closeEditModal(); return; }
