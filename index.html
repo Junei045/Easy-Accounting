@@ -2162,6 +2162,17 @@ function receiptClearFiles() {
   document.getElementById('receiptStatus').style.display = 'none';
 }
 
+// AI読取の年号誤読チェック（例：2026→2006のような桁ミスを検知）
+// 過去の未処理領収書をまとめて取り込む運用も考慮し、前年〜翌年は許容範囲とする
+function isSuspiciousYear(dateStr) {
+  if (!dateStr) return false;
+  var m = String(dateStr).match(/^(\d{4})-\d{2}-\d{2}$/);
+  if (!m) return false;
+  var year = parseInt(m[1], 10);
+  var currentYear = new Date().getFullYear();
+  return (year < currentYear - 1) || (year > currentYear + 1);
+}
+
 function receiptShowStatus(msg, type) {
   var el = document.getElementById('receiptStatus');
   el.className = 'receipt-status ' + type;
@@ -2258,16 +2269,31 @@ async function receiptReadAndFill() {
       document.querySelector('input[name="payment"][value="'+pay+'"]').checked = true;
       updateRadio();
       receiptClearFiles();
-      receiptShowStatus('✅ 入力欄に反映しました。内容を確認して「登録する」を押してください。', 'success');
+      if (isSuspiciousYear(e.date)) {
+        var dateInput = document.getElementById('entryDate');
+        dateInput.style.outline = '2px solid #c0392b';
+        dateInput.style.background = '#fdecea';
+        receiptShowStatus('⚠️ 読み取った日付「' + (e.date||'不明') + '」の年号が現在と大きく離れています。誤読の可能性があるので、登録前に必ず年号を確認してください。', 'error');
+      } else {
+        document.getElementById('entryDate').style.outline = '';
+        document.getElementById('entryDate').style.background = '';
+        receiptShowStatus('✅ 入力欄に反映しました。内容を確認して「登録する」を押してください。', 'success');
+      }
     } else {
       // 複数件は確認ダイアログ→一括登録
+      var hasSuspicious = parsed.entries.some(function(e){ return isSuspiciousYear(e.date); });
       var lines = parsed.entries.map(function(e, i){
         var type = (e.income && e.income > 0) ? '収入' : '支出';
         var amt = (e.income && e.income > 0) ? e.income : e.expense;
-        return (i+1) + '. ' + (e.date||'日付不明') + ' ' + (e.description||'') + ' ' + type + '¥' + (amt||0).toLocaleString();
+        var mark = isSuspiciousYear(e.date) ? '⚠️ ' : '';
+        return (i+1) + '. ' + mark + (e.date||'日付不明') + ' ' + (e.description||'') + ' ' + type + '¥' + (amt||0).toLocaleString();
       }).join('\n');
+      var header = '以下 ' + parsed.entries.length + '件を一括登録します：\n\n';
+      if (hasSuspicious) {
+        header = '⚠️ 年号が現在と大きく離れている日付があります（誤読の可能性）。⚠️印の行を必ず確認してください。\n\n' + header;
+      }
       showConfirmModal(
-        '以下 ' + parsed.entries.length + '件を一括登録します：\n\n' + lines + '\n\nよろしいですか？',
+        header + lines + '\n\nよろしいですか？',
         function() {
           parsed.entries.forEach(function(e) {
             var type = (e.income && e.income > 0) ? 'income' : 'expense';
@@ -2286,7 +2312,8 @@ async function receiptReadAndFill() {
           showToast('✅ ' + parsed.entries.length + '件を登録しました');
           showSection('ledger');
         },
-        '一括登録する', 'var(--navy)'
+        hasSuspicious ? '⚠️ 年号を確認のうえ登録する' : '一括登録する',
+        hasSuspicious ? '#c0392b' : 'var(--navy)'
       );
     }
   } catch(err) {
