@@ -1225,7 +1225,14 @@ function doLogin() {
 }
 
 function doLogout() {
-  if (!confirm('ログアウトしますか？')) return;
+  showConfirmModal(
+    '📥 退出する前に、最新データのCSVエクスポートをおすすめします。\n\n（出納帳画面の「📥 CSVダウンロード」から保存できます）\n\nこのまま「キャンセル」を押すと退出せずアプリに戻ります。\nエクスポート済み、または不要な場合は「エクスポートせずに退出する」を押してください。',
+    function(){ actuallyLogout(); },
+    'エクスポートせずに退出する', '#c0392b'
+  );
+}
+
+function actuallyLogout() {
   currentOrg = null;
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
