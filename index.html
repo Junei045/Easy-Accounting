@@ -1164,6 +1164,7 @@ var allData = {};
 function loadAll() {
   var raw = localStorage.getItem('accounting_v2');
   if (raw) allData = JSON.parse(raw);
+  migrateEntryDates();   // 保存済みデータの日付表記ゆれを吸収（重複判定の前提を揃える）
 }
 function saveAll() {
   localStorage.setItem('accounting_v2', JSON.stringify(allData));
@@ -1190,6 +1191,82 @@ function getFiscalYears() {
   return Array.from(years).sort().reverse();
 }
 function getYearLabel(y) { return y + '年度（' + y + '/4/1 〜 ' + (+y+1) + '/3/31）'; }
+
+// ============================
+//   正規化ユーティリティ（重複判定の共通基準）
+//   ※ 既存データ側とCSV側で必ず同じ関数を通すことが重要
+// ============================
+
+// 日付を「YYYY-MM-DD」に統一する
+// 例）2026/4/1 → 2026-04-01 ／ 2026年4月1日 → 2026-04-01
+function normalizeDateStr(d) {
+  if (!d) return '';
+  var s = String(d).trim().replace(/[年月]/g, '/').replace(/日/g, '');
+  var m = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/);
+  if (!m) return String(d).trim();
+  return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+}
+
+// 摘要などの文字列を比較用に整える（全角スペース・連続スペース・前後空白を吸収）
+function normalizeText(s) {
+  return String(s == null ? '' : s).replace(/\u3000/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// 重複判定キー
+// 区切りに制御文字(\u0001)を使うので、摘要に「_」が入っていても誤判定しない
+function entryDupKey(o) {
+  return [
+    normalizeDateStr(o.date),
+    normalizeText(o.desc),
+    String(parseInt(o.amount, 10) || 0),
+    o.type === 'income' ? 'income' : 'expense',
+    o.payment === 'bank' ? 'bank' : 'cash'
+  ].join('\u0001');
+}
+
+// 保存済みデータの日付を一度だけ正規化する
+// （AI領収書読取などで「2026/4/1」形式が混ざると重複判定が外れるため）
+function migrateEntryDates() {
+  var changed = false;
+  Object.keys(allData).forEach(function(org) {
+    var list = allData[org] && allData[org].entries;
+    if (!list || !list.length) return;
+    list.forEach(function(e) {
+      var nd = normalizeDateStr(e.date);
+      if (nd && nd !== e.date) { e.date = nd; changed = true; }
+    });
+  });
+  if (changed) saveAll();
+}
+
+// RFC4180準拠のCSVパーサ（引用符内のカンマ・改行・「""」に対応）
+function parseCSVText(text) {
+  var rows = [], row = [], cur = '', inQ = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }   // 「""」はデータとしての「"」
+        else { inQ = false; }
+      } else { cur += c; }
+    } else {
+      if (c === '"') { inQ = true; }
+      else if (c === ',') { row.push(cur); cur = ''; }
+      else if (c === '\r') { /* CRLF の CR は無視 */ }
+      else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+      else { cur += c; }
+    }
+  }
+  row.push(cur); rows.push(row);
+  return rows.filter(function(r) {
+    return r.some(function(c){ return String(c).trim() !== ''; });
+  });
+}
+
+// CSV 1セルの書き出し（内部の「"」を「""」にエスケープ）
+function csvCell(v) {
+  return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+}
 
 // ============================
 //   LOGIN / LOGOUT
@@ -1981,62 +2058,80 @@ function importCSV(input) {
   var reader = new FileReader();
   reader.onload = function(e) {
     try {
-      var text  = e.target.result.replace(/^\uFEFF/, '');
-      var lines = text.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l; });
-      if (lines.length < 2) { showImportResult('error','データが見つかりませんでした。'); return; }
-      var header   = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+      var text = e.target.result.replace(/^\uFEFF/, '');
+      var rows = parseCSVText(text);
+      if (rows.length < 2) { showImportFeedback('error','データが見つかりませんでした。'); return; }
+
+      var header = rows[0].map(function(h){ return String(h).replace(/^\uFEFF/, '').trim(); });
       var required = ['日付','摘要','勘定科目','収入','支出','決済方法'];
-      var missing  = required.filter(function(r){ return !header.includes(r); });
-      if (missing.length > 0) { showImportResult('error','CSVの形式が正しくありません。\n不足列：' + missing.join('、')); return; }
+      var missing  = required.filter(function(r){ return header.indexOf(r) === -1; });
+      if (missing.length > 0) { showImportFeedback('error','CSVの形式が正しくありません。\n不足列：' + missing.join('、')); return; }
 
       var idx = {
+        id: header.indexOf('ID'),
         date: header.indexOf('日付'), desc: header.indexOf('摘要'),
         subject: header.indexOf('勘定科目'), voucherNo: header.indexOf('伝票番号'),
         income: header.indexOf('収入'), expense: header.indexOf('支出'),
         payment: header.indexOf('決済方法'), transferId: header.indexOf('振替ID')
       };
 
-      var existing    = getEntries();
-      var existingKeys = new Set(existing.map(function(e){ return e.date+'_'+e.desc+'_'+e.amount+'_'+e.type; }));
+      var existing = getEntries();
+
+      // ① IDによる照合用
+      var existingIds = new Set();
+      existing.forEach(function(en){
+        if (en.id !== undefined && en.id !== null && en.id !== '') existingIds.add(String(en.id));
+      });
+
+      // ② 内容による照合用（同じ内容が複数件ある場合に備えて「件数」で数える）
+      var keyCount = {};
+      existing.forEach(function(en){
+        var k = entryDupKey(en);
+        keyCount[k] = (keyCount[k] || 0) + 1;
+      });
+
       var added = 0, skipped = 0, errors = 0;
       var newEntries = [];
 
-      lines.slice(1).forEach(function(line) {
-        if (!line.trim()) return;
-        var cols = [], cur = '', inQ = false;
-        for (var i=0; i<line.length; i++) {
-          var c = line[i];
-          if (c==='"') { inQ=!inQ; }
-          else if (c===',' && !inQ) { cols.push(cur); cur=''; }
-          else { cur+=c; }
-        }
-        cols.push(cur);
-        var get = function(i){ return (cols[i]||'').replace(/"/g,'').trim(); };
+      rows.slice(1).forEach(function(cols) {
+        var get = function(i){ return (i >= 0 && cols[i] != null) ? String(cols[i]).trim() : ''; };
 
-        var date       = get(idx.date);
-        var desc       = get(idx.desc);
-        var subject    = get(idx.subject);
-        var voucherNo  = get(idx.voucherNo);
-        var incomeStr  = get(idx.income);
-        var expenseStr = get(idx.expense);
-        var paymentStr = get(idx.payment);
+        var date = normalizeDateStr(get(idx.date));
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { errors++; return; }
 
-        if (!date || !/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(date)) { errors++; return; }
-        var normalizedDate = date.replace(/\//g,'-');
-        var incomeAmt  = parseInt((incomeStr ||'').replace(/,/g,'')) || 0;
-        var expenseAmt = parseInt((expenseStr||'').replace(/,/g,'')) || 0;
-        if (incomeAmt===0 && expenseAmt===0) { errors++; return; }
+        var num = function(s){ return parseInt(String(s).replace(/[,，¥￥\s]/g, ''), 10) || 0; };
+        var incomeAmt  = num(get(idx.income));
+        var expenseAmt = num(get(idx.expense));
+        if (incomeAmt === 0 && expenseAmt === 0) { errors++; return; }
 
         var type    = incomeAmt > 0 ? 'income' : 'expense';
         var amount  = incomeAmt > 0 ? incomeAmt : expenseAmt;
-        var payment = paymentStr === '銀行口座' ? 'bank' : 'cash';
-        var transferId = idx.transferId >= 0 ? get(idx.transferId) : '';
-        var key     = normalizedDate + '_' + desc + '_' + amount + '_' + type;
-        if (existingKeys.has(key)) { skipped++; return; }
-        existingKeys.add(key);
-        var entry = { id: Date.now() + Math.random(), date: normalizedDate, desc: desc,
-          subject: subject||'その他', voucherNo: voucherNo, type: type, amount: amount, payment: payment };
+        var payment = get(idx.payment) === '銀行口座' ? 'bank' : 'cash';
+        var desc    = normalizeText(get(idx.desc));
+        var csvId   = get(idx.id);
+
+        var key = entryDupKey({ date: date, desc: desc, amount: amount, type: type, payment: payment });
+
+        // ①ID一致ならスキップ（同一レコードが既にある）
+        if (csvId && existingIds.has(csvId)) {
+          if (keyCount[key] > 0) keyCount[key]--;   // 内容側のカウントも消費しておく
+          skipped++; return;
+        }
+        // ②内容一致ならスキップ（既存にある分だけ消費する）
+        if (keyCount[key] > 0) { keyCount[key]--; skipped++; return; }
+
+        var newId = csvId || (Date.now().toString() + '_' + Math.random().toString(36).slice(2, 8));
+        existingIds.add(String(newId));
+
+        var entry = {
+          id: newId, date: date, desc: desc,
+          subject: get(idx.subject) || 'その他', voucherNo: get(idx.voucherNo),
+          type: type, amount: amount, payment: payment,
+          createdAt: new Date().toISOString()
+        };
+        var transferId = get(idx.transferId);
         if (transferId) entry.transferId = transferId;
+
         newEntries.push(entry);
         added++;
       });
@@ -2044,22 +2139,33 @@ function importCSV(input) {
       if (newEntries.length > 0) {
         allData[currentOrg].entries = getEntries().concat(newEntries);
         saveAll();
+        populateYearSelects();
         renderLedger();
       }
+
       if (added > 0) {
-        showImportResult('success','✅ インポート完了！\n新規追加：'+added+'件'+(skipped>0?'　重複スキップ：'+skipped+'件':'')+(errors>0?'　読込エラー：'+errors+'件':''));
-        showToast('✅ ' + added + '件をインポートしました');
+        showImportFeedback('success','✅ インポート完了！\n新規追加：'+added+'件'+(skipped>0?'　重複スキップ：'+skipped+'件':'')+(errors>0?'　読込エラー：'+errors+'件':''),
+          '✅ ' + added + '件をインポートしました' + (skipped>0 ? '（重複' + skipped + '件はスキップ）' : ''));
       } else if (skipped > 0) {
-        showImportResult('warn','⚠️ すべて重複データのためスキップしました（'+skipped+'件）');
+        showImportFeedback('warn','⚠️ すべて重複データのためスキップしました（'+skipped+'件）',
+          '⚠️ すべて登録済みのデータでした（'+skipped+'件スキップ）');
       } else {
-        showImportResult('error','❌ インポートできるデータがありませんでした。'+(errors>0?'（エラー：'+errors+'件）':''));
+        showImportFeedback('error','❌ インポートできるデータがありませんでした。'+(errors>0?'（エラー：'+errors+'件）':''),
+          '❌ インポートできるデータがありませんでした');
       }
     } catch(err) {
-      showImportResult('error','CSVの読み込みに失敗しました。ファイルを確認してください。');
+      showImportFeedback('error','CSVの読み込みに失敗しました。ファイルを確認してください。',
+        '❌ CSVの読み込みに失敗しました');
     }
     input.value = '';
   };
   reader.readAsText(file,'UTF-8');
+}
+
+// 設定画面の結果表示欄（#importResult）と、出納帳画面用トーストの両方に通知する
+function showImportFeedback(type, msg, toastMsg) {
+  showImportResult(type, msg);
+  showToast(toastMsg || msg.split('\n')[0]);
 }
 
 function showImportResult(type, msg) {
@@ -2078,15 +2184,23 @@ function exportCSV() {
   var year = document.getElementById('filterYear') && document.getElementById('filterYear').value;
   var entries = getEntries();
   if (year) entries = entries.filter(function(e){ return getFiscalYear(e.date) == year; });
-  entries.sort(function(a,b){ return a.date.localeCompare(b.date); });
-  var header = ['日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別','振替ID'];
+  entries = entries.slice().sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); });
+
+  // 先頭に「ID」列を追加。他PCでインポートする際、同一伝票を確実に見分けるため。
+  var header = ['ID','日付','摘要','勘定科目','伝票番号','収入','支出','決済方法','種別','振替ID'];
   var rows = entries.map(function(e){ return [
-    e.date, e.desc, e.subject, e.voucherNo||'',
-    e.type==='income'?e.amount:'', e.type==='expense'?e.amount:'',
-    e.payment==='bank'?'銀行口座':'現金', e.type==='income'?'収入':'支出',
-    e.transferId||''
+    e.id || '',
+    normalizeDateStr(e.date),          // 書き出す時点で日付表記を統一する
+    normalizeText(e.desc),             // 摘要も比較基準に合わせて整える
+    e.subject, e.voucherNo || '',
+    e.type === 'income'  ? e.amount : '',
+    e.type === 'expense' ? e.amount : '',
+    e.payment === 'bank' ? '銀行口座' : '現金',
+    e.type === 'income'  ? '収入' : '支出',
+    e.transferId || ''
   ]; });
-  var csv  = [header].concat(rows).map(function(r){ return r.map(function(c){ return '"'+c+'"'; }).join(','); }).join('\n');
+
+  var csv  = [header].concat(rows).map(function(r){ return r.map(csvCell).join(','); }).join('\r\n');
   var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   var a    = document.createElement('a');
   a.href   = URL.createObjectURL(blob);
